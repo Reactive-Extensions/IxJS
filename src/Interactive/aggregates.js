@@ -19,9 +19,7 @@
     function extremaBy (source, keySelector, comparer) {
         var result = [], e = source.getEnumerator();
         try {
-            if (!e.moveNext()) {
-                throw new Error(seqNoElements);
-            }
+            if (!e.moveNext()) { throw new Error(seqNoElements); }
 
             var current = e.getCurrent(),
                 resKey = keySelector(current);
@@ -63,8 +61,28 @@
      * @param comparer Comparer used to determine the maximum value.
      * @return Maximum value in the sequence.
      */
-    EnumerablePrototype.max = function (comparer) {
-
+    EnumerablePrototype.max = function(selector) {
+        if(selector) {
+            return this.select(selector).max();
+        }       
+        var m, hasElement = false, e = this.getEnumerator();
+        try {
+            while (e.moveNext()) {
+                var x = e.getCurrent();
+                if (!hasElement) {
+                    m = x;
+                    hasElement = true;
+                } else {
+                    if (x > m) {
+                        m = x;
+                    }
+                }
+            }
+        } finally {
+            e.dispose();
+        }
+        if(!hasElement) { throw new Error(seqNoElements); }
+        return m;
     };
 
     /**
