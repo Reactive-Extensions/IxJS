@@ -1,3 +1,56 @@
+    function functionBind(f, context) {
+        return function () {
+            f.apply(context, arguments);
+        };
+    }
+
+    /**
+     * Lazily invokes an action for each value in the sequence, and executes an action upon successful or exceptional termination.
+     * 
+     * e.doAction(onNext);
+     * e.doAction(onNext, onError);
+     * e.doAction(onNExt, onError, onCompleted);
+     * e.doAction(observer);
+
+     * @param onNext Action to invoke for each element or Observer.
+     * @param onError Action to invoke on exceptional termination of the sequence.
+     * @param onCompleted Action to invoke on successful termination of the sequence.
+     * @return Sequence exhibiting the specified side-effects upon enumeration.
+     */
+    EnumerablePrototype.doAction = function (onNext, onError, onCompleted) {
+        var oN, oE, oC, self = this;
+        if (typeof onNext === 'object') {
+            oN = functionBind(onNext.onNext, onNext);
+            oE = functionBind(onNext.onError, onNext);
+            oC = functionBind(onNext.onCompleted, onNext);
+        } else {
+            oN = onNext; 
+            oE = onError || noop;
+            oC = onCompleted || noop;
+        }
+        return new Enumerable(function () {
+            var e, done, current;
+            return enumeratorCreate(
+                function () {
+                    e || (e = self.getEnumerator());
+                    try {
+                        if (!e.moveNext()) {
+                            oC();
+                            return false; 
+                        }
+                        current = e.getCurrent();
+                    } catch (e) {
+                        oE(e);
+                        throw e;
+                    }
+                    oN(current);
+                    return true;
+                },
+                function () { return current; }, 
+                function () { e && e.dispose(); }
+            );
+        });
+    };
     
     /**
      * Generates a sequence of buffers over the source sequence, with specified length and possible overlap.
@@ -72,25 +125,26 @@
      * @param comparer Comparer used to compare key values.
      * @return Sequence that contains the elements from the source sequence with distinct key values.
      */
-    EnumerablePrototype.distinct = function(comparer) {
+    EnumerablePrototype.distinctBy = function(keySelector, comparer) {
         comparer || (comparer = defaultEqualityComparer);
         var parent = this;
-        return Enumerable(function () {
+        return new Enumerable(function () {
             var current, map = [], e;
             return enumeratorCreate(
                 function () {
                     e || (e = parent.getEnumerator());
                     while (true) {
                         if (!e.moveNext()) { return false; }
-                        current = e.getCurrent();
-                        if (arrayIndexOf.call(map, current, comparer) === -1) {
-                            map.push(current);
+                        var item = e.getCurrent(), key = keySelector(item);
+                        if (arrayIndexOf.call(map, key, comparer) === -1) {
+                            map.push(item);
+                            current = item;
                             return true;
                         }
                     }
                 },
                 function () { return current; },
-                function () { e.dispose(); }
+                function () { e && e.dispose(); }
             );
         });
     };
@@ -101,11 +155,12 @@
      * @param comparer Comparer used to compare key values.
      * @return Sequence without adjacent non-distinct elements.
      */
-    EnumerablePrototype.distinctUntilChanged = function (selector, comparer) {
+    EnumerablePrototype.distinctUntilChanged = function (keySelector, comparer) {
+        keySelector || (keySelector = identity);
         comparer || (comparer = defaultEqualityComparer);
         var parent = this;
         return new Enumerable(function () {
-            var current, index = 0, e;
+            var current, e, currentKey, hasCurrentKey;
             return enumeratorCreate(
                 function () {
                     e || (e = parent.getEnumerator());
@@ -113,15 +168,22 @@
                         if (!e.moveNext()) {
                             return false;
                         }
-                        var next = e.getCurrent();
-                        if (!defaultComparer(current, next)) {
-                            current = next;
+                        var item = e.getCurrent(),
+                            key = keySelector(item),
+                            comparerEquals = false;
+                        if (hasCurrentKey) {
+                            comparerEquals = comparer(currentKey, key);
+                        }
+                        if (!hasCurrentKey || !comparerEquals) {
+                            current = item;
+                            currentKey = key;
+                            hasCurrentKey = true;
                             return true;
                         }
                     }
                 },
                 function () { return current; },
-                function () { e.dispose(); });
+                function () { e && e.dispose(); });
         });
     };
 
@@ -132,7 +194,7 @@
      */
     EnumerablePrototype.expand = function(selector) {
         var parent = this;
-        return enumerableCreate(function () {
+        return new Enumerable(function () {
             var current, q = [parent], inner;
             return enumeratorCreate(
                 function () {
@@ -168,35 +230,52 @@
 
     function scan (seed, accumulator) {
         var source = this;
-        return enumerableDefer(function () {
-            var accumulation, hasAccumulation = false;
-            return source.select(function (x) {
-                if (hasAccumulation) {
-                    accumulation = accumulator(accumulation, x);
-                } else {
-                    accumulation = accumulator(seed, x);
-                    hasAccumulation = true;
-                }
-                return accumulation;
-            });
+        return new Enumerable(function () {
+            var current, e, acc = seed;
+            return enumeratorCreate(
+                function () {
+                    e || (e = source.getEnumerator());
+                    if (!e.moveNext()) { return false; }
+                    var item = e.getCurrent();
+                    acc = accumulator(acc, item);
+                    current = acc;
+                    return true;
+                },
+                function () { return current; },
+                function () { e && e.dispose(); }
+            );
         });
     }
 
     function scan1 (accumulator) {
         var source = this;
-        return enumerableDefer(function () {
-            var accumulation, hasAccumulation = false;
-            return source.select(function (x) {
-                if (hasAccumulation) {
-                    accumulation = accumulator(accumulation, x);
-                } else {
-                    accumulation = x;
-                    hasAccumulation = true;
-                }
-                return accumulation;
-            });
+        return new Enumerable(function () {
+            var current, e, acc, hasSeed = false;
+            return enumeratorCreate(
+                function () {
+                    e || (e = source.getEnumerator());
+                    
+                    while(true) {
+                        if (!e.moveNext()) { return false; }
+                        var item = e.getCurrent();
+
+                        if (!hasSeed) {
+                            hasSeed = true;
+                            acc = item;
+                            continue;
+                        }
+
+                        acc = accumulator(acc, item);
+                        current = acc;
+                        return true;
+                    }
+
+                },
+                function () { return current; },
+                function () { e && e.dispose(); }
+            );
         });
-    };    
+    } 
 
     /**
      * Generates a sequence of accumulated values by scanning the source sequence and applying an accumulator function.
@@ -206,7 +285,7 @@
      */
     EnumerablePrototype.scan = function (/* seed, accumulator */) {
         var f = arguments.length === 1 ? scan1 : scan;
-        return f.apply(this, args);
+        return f.apply(this, arguments);
     };
 
     /**
@@ -237,7 +316,7 @@
                     return true;
                 },
                 function () { return current; },
-                function () { e.dispose(); }
+                function () { e && e.dispose(); }
             );
         });
     };
@@ -266,7 +345,7 @@
                     }
                 },
                 function () { return current; },
-                function () { enumerator.dispose(); }
+                function () { e && e.dispose(); }
             );
         });
     };

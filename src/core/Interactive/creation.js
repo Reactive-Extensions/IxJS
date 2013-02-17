@@ -42,7 +42,7 @@
      * @param enumerableFactory Enumerable factory function.
      * @return Sequence that will invoke the enumerable factory upon a call to GetEnumerator.
      */
-    Enumerable.defer = function (enumerableFactory) {
+    var enumerableDefer = Enumerable.defer = function (enumerableFactory) {
         return new Enumerable(function () {
             var enumerator;
             return enumeratorCreate(function () {
@@ -93,23 +93,23 @@
      */
     Enumerable.using = function (resourceFactory, enumerableFactory) {
         return new Enumerable(function () {
-            var current, first = true, enumerator, res;
+            var current, first = true, e, res;
             return enumeratorCreate(function () {
                 if (first) {
-                    res = resourceSelector();
-                    enumerator = enumerableFactory(res).getEnumerator();
+                    res = resourceFactory();
+                    e = enumerableFactory(res).getEnumerator();
                     first = false;
                 }
-                if (!enumerator.moveNext()) {
+                if (!e.moveNext()) {
                     return false;
                 }
 
-                current = enumerator.getCurrent();
+                current = e.getCurrent();
                 return true;
             }, function () {
                 return current;
             }, function () {
-                enumerator && enumerator.dispose();
+                e && e.dispose();
                 res && res.dispose();
             });
         });
