@@ -40,8 +40,8 @@ module.exports = function (grunt) {
                     //'src/core/interactive/buffering.js',
                     'src/core/interactive/creation.js',
                     'src/core/interactive/single.js',
-                    //'src/core/interactive/exception.js',
-                    //'src/core/interactive/imperative.js',
+                    'src/core/interactive/exception.js',
+                    'src/core/interactive/imperative.js',
                     'src/core/suboutro.js'
                 ],
                 dest: 'ix.js'
