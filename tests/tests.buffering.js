@@ -114,6 +114,55 @@ and limitations under the License.
         var e1 = rng.getEnumerator();
         ok(e1.moveNext());
         equal(0, e1.getCurrent());
-    });    
+    });
+
+    test('Publish0', function () {
+        var n = 0;
+        var rng = tick(function (i) { n += i; }).publish();
+
+        var e1 = rng.getEnumerator();
+        var e2 = rng.getEnumerator();
+
+        hasNext(e1, 0);
+        equal(0, n);
+
+        hasNext(e1, 1);
+        equal(1, n);
+
+        hasNext(e1, 2);
+        equal(3, n);
+        hasNext(e2, 0);
+        equal(3, n);
+
+        hasNext(e1, 3);
+        equal(6, n);
+        hasNext(e2, 1);
+        equal(6, n);
+
+        hasNext(e2, 2);
+        equal(6, n);
+        hasNext(e2, 3);
+        equal(6, n);
+
+        hasNext(e2, 4);
+        equal(10, n);
+        hasNext(e1, 4);
+        equal(10, n);
+    });
+
+    function tick(action) {
+        return new Enumerable(function () {
+            var i = 0, isFirst = true;
+            return Enumerator.create(
+                function () {
+                    if (!isFirst) { i++; }
+                    action(i);
+                    isFirst = false;
+                    return true;
+                },
+                function () { return i; }
+            );
+        });
+    }
 
 }(this));

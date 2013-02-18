@@ -87,7 +87,7 @@
     };
 
     RefCountListPrototype.push = function (item) {
-        this.list[this.length++] = { value: item, length: this.readerCount };
+        this.list[this.length] = { value: item, length: this.readerCount };
         this.length++;
     };
 
@@ -107,18 +107,16 @@
         }
 
         function getEnumerator(i) {
-            var currentValue, e, self = this, isDisposed = false, isFirst = true;
+            var currentValue, self = this, isDisposed = false, isFirst = true;
             return enumeratorCreate(
                 function () {
-                    e || (e = self.source.getEnumerator());
-
                     if (self.disposed) { throw new Error('Object disposed'); }
                     if (!isFirst) { i++; }
-                    var hasCurrent = false, current;
+                    var hasValue = false, current;
                     if (i <= self.buffer.length) {
                         if (!self.stopped) {
                             try {
-                                hasNext = self.source.moveNext();
+                                hasValue = self.source.moveNext();
                                 if (hasValue) { current = self.source.getCurrent(); }
 
                             } catch (e) {
@@ -145,7 +143,7 @@
                     }
 
                     if (hasValue) {
-                        currentValue = self.buffer[i];
+                        currentValue = self.buffer.get(i);
                         isFirst = false;
                         return true;
                     } else {
@@ -153,15 +151,13 @@
                     }
                 }, 
                 function () { return currentValue; }, 
-                function () {
-                    self.buffer && self.buffer.done(i);
-                    e && isDisposed && e.dispose();
-                });
+                function () { self.buffer && self.buffer.done(i); }
+            );
         }
 
         PublishedBuffer.prototype.getEnumerator = function () {
             var i = this.buffer.length;
-            this.buffer.length++;
+            this.buffer.readerCount++;
             return getEnumerator.call(this, i);
         };
 
@@ -279,7 +275,7 @@
                     }
 
                     if (hasValue) {
-                        currentValue = self.buffer[i];
+                        currentValue = self.buffer.get(i);
                         isFirst = false;
                         return true;
                     } else {
