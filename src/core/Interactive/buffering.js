@@ -1,6 +1,6 @@
 
     var SharedBuffer = (function () {
-        inherits(Enumerable, SharedBuffer);
+        inherits(SharedBuffer, Enumerable);
 
         function SharedBuffer (source) {
             this.disposed = false;
@@ -8,24 +8,26 @@
         }
 
         SharedBuffer.prototype.getEnumerator = function () {
-            var e, current, self = this;
+            if (this.disposed) {
+                throw new Error('Object disposed');
+            }
+
+            var current, self = this;
             return enumeratorCreate(
                 function () {
-                    e && (e = self.source.getEnumerator());
-
-                    if (e.moveNext()) {
-                        current = e.getCurrent();
+                    if (self.source.moveNext()) {
+                        current = self.source.getCurrent();
                         return true;
                     }
                     return false;
                 },
-                function () { return current; }, 
-                function () { e && e.dispose(); });
+                function () { return current; });
         };
 
         SharedBuffer.prototype.dispose = function () {
             if (!this.disposed) {
                 this.disposed = true;
+                this.source.dispose();
                 this.source = null;
             }
         };
@@ -57,6 +59,7 @@
      * @return Sequence resulting from applying the selector function to the shared view over the source sequence.
      */
     EnumerablePrototype.share = function (selector) {
+        var source = this;
         return !selector ? 
             new SharedBuffer(source.getEnumerator()) :
             new Enumerable(function () { return selector(source.share()).getEnumerator(); });
@@ -200,6 +203,7 @@
      * @return Sequence resulting from applying the selector function to the published view over the source sequence.
      */
     EnumerablePrototype.publish = function (selector) {
+        var source = this;
         return !selector ? 
             new PublishedBuffer(source.getEnumerator()) :
             new Enumerable(function () { return selector(source.publish()).getEnumerator(); });

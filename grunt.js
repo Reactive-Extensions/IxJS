@@ -37,7 +37,7 @@ module.exports = function (grunt) {
                     'src/core/subintro.js',
                     'src/core/ixheader.js',
                     'src/core/interactive/aggregates.js',
-                    //'src/core/interactive/buffering.js',
+                    'src/core/interactive/buffering.js',
                     'src/core/interactive/creation.js',
                     'src/core/interactive/single.js',
                     'src/core/interactive/exception.js',
