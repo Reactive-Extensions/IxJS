@@ -237,11 +237,9 @@
         }
 
         MemoizedBuffer.prototype.getEnumerator = function () {
-            var currentValue, e, self = this, isDisposed = false, isFirst = true, i = 0;
+            var currentValue, self = this, isDisposed = false, isFirst = true, i = 0;
             return enumeratorCreate(
                 function () {
-                    e || (e = self.source.getEnumerator());
-
                     if (self.disposed) { throw new Error('Object disposed'); }
                     if (!isFirst) { i++; }
                     var hasCurrent = false, current;
@@ -285,7 +283,6 @@
                 function () { return currentValue; }, 
                 function () {
                     self.buffer && self.buffer.done(i);
-                    e && isDisposed && e.dispose();
                 });
         };
 
