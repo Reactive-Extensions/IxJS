@@ -49,7 +49,9 @@
         } else if (typeof secondOrHandler === 'function') {
             return catchExceptionHandler(this, secondOrHandler); // use handler
         } else {
-            return enumerableCatch.apply(null, arguments); // create IE<IE<T>>
+            var args = slice.call(arguments);
+            args.unshift(this);
+            return enumerableCatch.apply(null, args); // create IE<IE<T>>
         }
     };
 
@@ -66,38 +68,44 @@
                 function () {
                     outerE || (outerE = sources.getEnumerator());
                     while (true) {
-                        if (!innerE) {
-                            if (!outerE.moveNext()) {
-                                return false;
+
+                        while (true) {
+                            if (!innerE) {
+                                if (!outerE.moveNext()) {
+                                    if (error) { throw error; }
+                                    return false;
+                                } else {
+                                    error = null;
+                                }
+
+                                innerE = outerE.getCurrent().getEnumerator();
                             }
 
-                            innerE = outerE.getCurrent().getEnumerator();
+                            var b, c;
+                            try {
+                                b = innerE.moveNext();
+                                c = innerE.getCurrent();
+                            } catch (e) {
+                                error = e;
+                                innerE.dispose();
+                                innerE = null;
+                                break;
+                            }
+
+                            if (!b) {
+                                innerE.dispose();
+                                innerE = null;
+                                break;
+                            }
+
+                            current = c;
+                            return true;
                         }
 
-                        var b, c;
-                        try {
-                            b = innerE.moveNext();
-                            c = innerE.getCurrent();
-                        } catch (e) {
-                            error = e;
+                        if (error == null) {
                             break;
                         }
-
-                        if (!b) {
-                            innerE.dispose();
-                            innerE = null;
-                            break;
-                        }
-
-                        current = c;
-                        return true;
-                    }
-
-                    if (error == null) {
-                        return false;
-                    } else {
-                        throw error;
-                    }
+                    }   
                 },
                 function () {
                     return current;
@@ -192,5 +200,33 @@
      * @return Sequence concatenating the results of the source sequence as long as an error occurs.
      */
     EnumerablePrototype.retry = function (retryCount) {
-        return Enumerable.returnValue(this).repeat(retryCount).catchException();
+        var parent = this;
+        return new Enumerable(function () {
+            var current, e, count = retryCount, hasCount = retryCount != null;
+            return enumeratorCreate(
+                function () {
+                    e || (e = parent.getEnumerator());
+                    while (true) {
+                        try {
+                            if (e.moveNext()) {
+                                current = e.getCurrent();
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                        catch (err) {
+                            if (hasCount && --count === 0) {
+                                throw err;
+                            } else {
+                                e = parent.getEnumerator(); // retry again
+                                error = null;
+                            }
+                        }
+                    }
+                },
+                function () { return current; },
+                function () { e.dispose(); }
+            );
+        });
     };

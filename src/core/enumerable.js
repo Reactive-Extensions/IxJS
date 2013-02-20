@@ -870,16 +870,13 @@
         });
     };  
 
-    var enumerableRepeat = Enumerable.repeat = function (value, count) {
+    var enumerableRepeat = Enumerable.repeat = function (value, repeatCount) {
         return new Enumerable(function () {
-            var myCount = count;
-            if (myCount === undefined) {
-                myCount = -1;
-            }
+            var count = repeatCount == null ? -1 : repeatCount, hasRepeatCount = repeatCount != null;
             return enumeratorCreate(
                 function () {
-                    if (myCount !== 0) {
-                        myCount--;
+                    if (count !== 0) {
+                        hasRepeatCount && count--;
                         return true;
                     } else {
                         return false;
