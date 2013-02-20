@@ -14,6 +14,7 @@
     }
 
     var seqNoElements = 'Sequence contains no elements.';
+    var objectDisposed = 'Object disposed';
     var slice = Array.prototype.slice;
 
     var Enumerable = root.Enumerable,

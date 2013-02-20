@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
-
-(function (root, factory) {
+;(function (root, factory) {
     var freeExports = typeof exports == 'object' && exports &&
     (typeof root == 'object' && root && root == root.global && (window = root), exports);
 
@@ -16,8 +15,7 @@
         root.Ix = factory(root, {}, root.Ix);
     }
 }(this, function (global, exp, root, undefined) {
-    
-    function noop () { }
+    ;    function noop () { }
     function identity (x) { return x; }
     function defaultComparer (x, y) { return x > y ? 1 : x < y ? -1 : 0; }
     function defaultEqualityComparer (x, y) { return x === y; }
@@ -33,6 +31,7 @@
     }
 
     var seqNoElements = 'Sequence contains no elements.';
+    var objectDisposed = 'Object disposed';
     var slice = Array.prototype.slice;
 
     var Enumerable = root.Enumerable,
@@ -42,8 +41,7 @@
         enumerableFromArray = Enumerable.fromArray,
         enumerableRepeat = Enumerable.repeat,
         enumeratorCreate = root.Enumerator.create
-        inherits = root.internals.inherits;
-
+        inherits = root.internals.inherits;;
     /** 
      * Determines whether an enumerable sequence is empty.
      * @return {Boolean} true if the sequence is empty; false otherwise.
@@ -139,8 +137,7 @@
     EnumerablePrototype.maxBy = function (keySelector, comparer) {
         comparer || (comparer = defaultComparer);
         return extremaBy(this, keySelector, comparer);  
-    };
-
+    };;
     var SharedBuffer = (function () {
         inherits(SharedBuffer, Enumerable);
 
@@ -233,7 +230,10 @@
         this.length++;
     };
 
-    RefCountListPrototype.done = function () {
+    RefCountListPrototype.done = function (index) {      
+        for (var i = index; i < this.length; i++) {
+            this.get(i);
+        }
         this.readerCount--;
     };
 
@@ -249,13 +249,13 @@
         }
 
         function getEnumerator(i) {
-            var currentValue, self = this, isDisposed = false, isFirst = true;
+            var currentValue, self = this, isDisposed = false, isFirst = true, isDone = false;
             return enumeratorCreate(
                 function () {
                     if (self.disposed) { throw new Error('Object disposed'); }
                     if (!isFirst) { i++; }
                     var hasValue = false, current;
-                    if (i <= self.buffer.length) {
+                    if (i >= self.buffer.length) {
                         if (!self.stopped) {
                             try {
                                 hasValue = self.source.moveNext();
@@ -271,8 +271,12 @@
 
                         if (self.stopped) {
                             if (self.error) {
+                                self.buffer && self.buffer.done(i + 1);
+                                isDone = true;
                                 throw self.error;
                             } else {
+                                self.buffer && self.buffer.done(i + 1);
+                                isDone = true;
                                 return false;
                             }
                         }
@@ -289,15 +293,20 @@
                         isFirst = false;
                         return true;
                     } else {
+                        self.buffer && self.buffer.done(i + 1);
+                        isDone = true;
                         return false;
                     }
                 }, 
                 function () { return currentValue; }, 
-                function () { self.buffer && self.buffer.done(i); }
+                function () { isDone && self.buffer && self.buffer.done(i); }
             );
         }
 
         PublishedBuffer.prototype.getEnumerator = function () {
+            if (this.disposed) {
+                throw new Error('Object disposed'); 
+            }
             var i = this.buffer.length;
             this.buffer.readerCount++;
             return getEnumerator.call(this, i);
@@ -379,16 +388,20 @@
         }
 
         MemoizedBuffer.prototype.getEnumerator = function () {
-            var currentValue, self = this, isDisposed = false, isFirst = true, i = 0;
+            if (this.disposed) {
+                throw new Error('Object disposed'); 
+            }
+
+            var i = 0, currentValue, self = this, isDisposed = false, isFirst = true, isDone = false;
             return enumeratorCreate(
                 function () {
                     if (self.disposed) { throw new Error('Object disposed'); }
                     if (!isFirst) { i++; }
-                    var hasCurrent = false, current;
-                    if (i <= self.buffer.length) {
+                    var hasValue = false, current;
+                    if (i >= self.buffer.length) {
                         if (!self.stopped) {
                             try {
-                                hasNext = self.source.moveNext();
+                                hasValue = self.source.moveNext();
                                 if (hasValue) { current = self.source.getCurrent(); }
 
                             } catch (e) {
@@ -401,8 +414,12 @@
 
                         if (self.stopped) {
                             if (self.error) {
+                                self.buffer && self.buffer.done(i + 1);
+                                isDone = true;
                                 throw self.error;
                             } else {
+                                self.buffer && self.buffer.done(i + 1);
+                                isDone = true;
                                 return false;
                             }
                         }
@@ -419,13 +436,14 @@
                         isFirst = false;
                         return true;
                     } else {
+                        self.buffer && self.buffer.done(i + 1);
+                        isDone = true;
                         return false;
                     }
                 }, 
                 function () { return currentValue; }, 
-                function () {
-                    self.buffer && self.buffer.done(i);
-                });
+                function () { isDone && self.buffer && self.buffer.done(i); }
+            );
         };
 
         MemoizedBuffer.prototype.dispose = function () {
@@ -437,6 +455,8 @@
                 this.disposed = true;
             }
         };
+
+        return MemoizedBuffer;
     }());
 
     /**
@@ -468,16 +488,15 @@
         var source = this;
         if (arguments.length === 0) {
             return new MemoizedBuffer(source.getEnumerator(), new MaxRefCountList());
-        } else if (arguments.length === 1 && typeof arguments[1] === 'function') {
+        } else if (arguments.length === 1 && typeof arguments[0] === 'function') {
             return new Enumerable(function () { return arguments[1](source.memoize()).getEnumerator(); });
-        } else if (arguments.length === 1 && typeof arguments[1] === 'number') {
-            return new MemoizedBuffer(source.getEnumerator(), new RefCountList(arguments[1]));
+        } else if (arguments.length === 1 && typeof arguments[0] === 'number') {
+            return new MemoizedBuffer(source.getEnumerator(), new RefCountList(arguments[0]));
         } else {
-            return new Enumerable(function () { return arguments[2](source.memoize(arguments[1])).getEnumerator(); });
+            return new Enumerable(function () { return arguments[1](source.memoize(arguments[0])).getEnumerator(); });
         }
     };
-
-
+    ;
     /**
      * Returns a sequence with a single element.
      * 
@@ -593,8 +612,7 @@
             });
         });
     };
-
-    function functionBind(f, context) {
+;    function functionBind(f, context) {
         return function () {
             f.apply(context, arguments);
         };
@@ -955,8 +973,7 @@
         var parent = this;
         return enumerableRepeat(0, count).selectMany(function () { return parent; });
     };     
-
-    function catchExceptionHandler (source, handler) {
+;    function catchExceptionHandler (source, handler) {
         return new Enumerable(function () {
             var current, e, errE;
             return enumeratorCreate(
@@ -1141,8 +1158,7 @@
                 function () { e.dispose(); }
             );
         });
-    };
-    /**
+    };;    /**
      * Generates an enumerable sequence by repeating a source sequence as long as the given loop condition holds.
      * @param condition Loop condition.
      * @param source Sequence to repeat while the condition evaluates true.
@@ -1201,6 +1217,5 @@
     Enumerable.forIn = function (source, resultSelector) {
         return source.select(resultSelector);
     };
-
-    return root;
+;    return root;
 }));

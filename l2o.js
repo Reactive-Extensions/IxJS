@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
-
-(function (window, undefined) {
+;(function (window, undefined) {
     var freeExports = typeof exports == 'object' && exports &&
         (typeof global == 'object' && global && global == global.global && (window = global), exports);    
 
     var root = { internals: {} };
-    
-    // Headers
+    ;    // Headers
     function noop () { }
     function identity (x) { return x; }
     function defaultComparer (x, y) { return x > y ? 1 : x < y ? -1 : 0; }
@@ -26,8 +24,7 @@
         child.super_ = parent.prototype;
         return child;
     };
-    
-    var Enumerator = root.Enumerator = function (moveNext, getCurrent, dispose) {
+    ;    var Enumerator = root.Enumerator = function (moveNext, getCurrent, dispose) {
         this.moveNext = moveNext;
         this.getCurrent = getCurrent;
         this.dispose = dispose;
@@ -52,8 +49,7 @@
                 done = true;
             }
         });
-    };
-    var Enumerable = root.Enumerable = (function () {
+    };;    var Enumerable = root.Enumerable = (function () {
         function Enumerable(getEnumerator) {
             this.getEnumerator = getEnumerator;
         }
@@ -1064,8 +1060,7 @@
 
         return OrderedEnumerable;
     }());
-    
-    // Check for AMD
+    ;    // Check for AMD
     if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
         window.Ix = root;
         return define(function () {
@@ -1080,5 +1075,4 @@
     } else {
         window.Ix = root;
     }
-    
-}(this));
+    ;}(this));
