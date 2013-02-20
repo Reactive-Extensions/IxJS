@@ -1019,9 +1019,13 @@
      * @return The first sequence, followed by the second sequence in case an error is produced.
      */
     EnumerablePrototype.catchException = function (secondOrHandler) {
-        return typeof secondOrHandler === 'function' ?
-            catchExceptionHandler(this, secondOrHandler) :
-            enumerableCatch(this, secondOrHandler);
+        if (arguments.length === 0) {
+            return enumerableCatch(this); // Already IE<IE<T>>
+        } else if (typeof secondOrHandler === 'function') {
+            return catchExceptionHandler(this, secondOrHandler); // use handler
+        } else {
+            return enumerableCatch.apply(null, arguments); // create IE<IE<T>>
+        }
     };
 
     /**
@@ -1029,42 +1033,56 @@
      * @return Sequence that continues to concatenate source sequences while errors occur.
      */
     var enumerableCatch = Enumerable.catchException = function () {
-        var array = arguments;
+        // Check arguments
+        var sources = Enumerable.fromArray(arguments);
         return new Enumerable(function () {
-            var index = 0, current, e, error;
+            var outerE, hasOuter, innerE, current, error;
             return enumeratorCreate(
                 function () {
-                    if (index < array.length) {
-                        e || (e = array[index++].getEnumerator());
-                        while (true) {
-                            var b, c;
-                            try {
-                                b = e.moveNext();
-                                c = e.getCurrent();
-                            } catch (err) {
-                                error = err;
-                                break;
+                    outerE || (outerE = sources.getEnumerator());
+                    while (true) {
+                        if (!innerE) {
+                            if (!outerE.moveNext()) {
+                                return false;
                             }
 
-                            if (!b) {
-                                e.dispose();
-                                e = null;
-                                break;
-                            }
-
-                            current = c;
-                            return true;
+                            innerE = outerE.getCurrent().getEnumerator();
                         }
-                        if (!error) {  return false; }
-                    }
-                    if (error) {  throw error; }
 
-                    return false;
+                        var b, c;
+                        try {
+                            b = innerE.moveNext();
+                            c = innerE.getCurrent();
+                        } catch (e) {
+                            error = e;
+                            break;
+                        }
+
+                        if (!b) {
+                            innerE.dispose();
+                            innerE = null;
+                            break;
+                        }
+
+                        current = c;
+                        return true;
+                    }
+
+                    if (error == null) {
+                        return false;
+                    } else {
+                        throw error;
+                    }
                 },
-                function () { return current; },
-                function () { e && e.dispose(); }
+                function () {
+                    return current;
+                },
+                function () {
+                    innerE && innerE.dispose();
+                    outerE && outerE.dispose();
+                }
             );
-        });        
+        });
     };
 
     /**
@@ -1148,34 +1166,8 @@
      * @param retryCount Maximum number of retries.
      * @return Sequence concatenating the results of the source sequence as long as an error occurs.
      */
-    EnumerablePrototype.retry = function (count) {
-        var parent = this;
-        return new Enumerable(function () {
-            var current, e, myCount = count;
-            if (myCount == null) {
-                myCount = -1;
-            }
-            return enumeratorCreate(
-                function () {
-                    e || (e = parent.getEnumerator());
-                    while (true) {
-                        try {
-                            if (e.moveNext()) {
-                                current = e.getCurrent();
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        }
-                        catch (e) {
-                            if (myCount-- === 0) { throw e; }
-                        }
-                    }
-                },
-                function () { return current; },
-                function () { e.dispose(); }
-            );
-        });
+    EnumerablePrototype.retry = function (retryCount) {
+        return Enumerable.returnValue(this).repeat(retryCount).catchException();
     };;    /**
      * Generates an enumerable sequence by repeating a source sequence as long as the given loop condition holds.
      * @param condition Loop condition.
