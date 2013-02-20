@@ -991,7 +991,7 @@
                         }
 
                         if (!b) {
-                            break;
+                            return false;
                         }
 
                         current = c;
@@ -999,15 +999,16 @@
                     }
 
                     if (errE) {
-                        if (!errE.moveNext()) { return false; }
-                        current = errE.getCurrent();
+                        e.dispose();
+                        e = errE.getEnumerator();
+                        if (!e.moveNext()) { return false; }
+                        current = e.getCurrent();
                         return true;
                     }
                 }, 
                 function () { return current; }, 
                 function () {
-                    e.dispose();
-                    errE && errE.dispose();
+                    e && e.dispose();
                 });
         });
     }
@@ -1018,7 +1019,7 @@
      * @return The first sequence, followed by the second sequence in case an error is produced.
      */
     EnumerablePrototype.catchException = function (secondOrHandler) {
-        return secondOrHandler === 'function' ?
+        return typeof secondOrHandler === 'function' ?
             catchExceptionHandler(this, secondOrHandler) :
             enumerableCatch(this, secondOrHandler);
     };
@@ -1027,7 +1028,7 @@
      * Creates a sequence by concatenating source sequences until a source sequence completes successfully.
      * @return Sequence that continues to concatenate source sequences while errors occur.
      */
-    Enumerable.catchException = function () {
+    var enumerableCatch = Enumerable.catchException = function () {
         var array = arguments;
         return new Enumerable(function () {
             var index = 0, current, e, error;
@@ -1040,13 +1041,13 @@
                             try {
                                 b = e.moveNext();
                                 c = e.getCurrent();
-                            } catch (e) {
-                                error = e;
+                            } catch (err) {
+                                error = err;
                                 break;
                             }
 
                             if (!b) {
-                                e.dipose();
+                                e.dispose();
                                 e = null;
                                 break;
                             }
@@ -1061,7 +1062,7 @@
                     return false;
                 },
                 function () { return current; },
-                function () { e.dispose(); }
+                function () { e && e.dispose(); }
             );
         });        
     };
@@ -1074,13 +1075,30 @@
     EnumerablePrototype.finallyDo = function (finallyAction) {
         var parent = this;
         return new Enumerable(function () {
-            var e = parent.getEnumerator();
+            var e, finallyCalled = false;
             return enumeratorCreate(
-                function () { return e.moveNext(); },
+                function () { 
+                    e || (e = parent.getEnumerator());
+
+                    var next;
+                    try {
+                        next = e.moveNext();
+                        if (!next) {
+                            finallyAction();
+                            finallyCalled = true;
+                            return false;
+                        }
+                        return next;                       
+                    } catch (e) {
+                        finallyAction();
+                        finallyCalled = true;
+                        throw e;
+                    }
+                },
                 function () { return e.getCurrent(); },
                 function () {
-                    e.dispose();
-                    finallyAction();
+                    !finallyCalled && finallyAction();
+                    e && e.dispose();
                 }
             );
         });
@@ -1105,7 +1123,7 @@
             var current, index = 0, inner;
             return enumeratorCreate(function () {
                 while (index < sources.length) {
-                    inner || (inner = sources[index++].getEnumerator());
+                    inner || (inner = sources[index].getEnumerator());
                     try {
                         var result = inner.moveNext();
                         if (result) {
@@ -1113,10 +1131,10 @@
                             return true;
                         }
                     }
-                    catch (e) {
-                    }
+                    catch (e) { }
                     inner.dispose();
                     inner = null;
+                    index++;
                 }
                 return false;
             },

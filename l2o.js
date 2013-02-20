@@ -11,6 +11,7 @@
     function defaultEqualityComparer(x, y) { return x === y; }
 
     var seqNoElements = 'Sequence contains no elements.';
+    var invalidOperation = 'Invalid operation';
     var slice = Array.prototype.slice;
 
     var hasProp = {}.hasOwnProperty;
