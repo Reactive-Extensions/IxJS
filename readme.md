@@ -34,13 +34,13 @@ Installing via NPM:
 
 Using in Node.js:
 
-    var Rx = require('ix');
+    var Ix = require('ix');
 
 Using RxJS with an AMD loader such as Require.js
 
     require({
         'paths': {
-            'rx': 'path/to/ix.js'
+            'ix': 'path/to/ix.js'
         }
     },
     ['ix'], function(Ix) {
