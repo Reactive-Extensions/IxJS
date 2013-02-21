@@ -7,15 +7,6 @@
         return !this.any();
     };
 
-    /**
-     *  Returns the minimum value in the enumerable sequence by using the specified comparer to compare values.
-     *  @param {Function} comparer Comparer used to determine the minimum value.
-     *  @return {Any} Minimum value in the sequence.
-     */
-    EnumerablePrototype.min = function (comparer) {
-        return this.minBy(identity, comparer).first();
-    };
-
     function extremaBy (source, keySelector, comparer) {
         var result = [], e = source.getEnumerator();
         try {
@@ -54,35 +45,6 @@
         return extremaBy(this, keySelector, function (key, minValue) {
             return -comparer(key, minValue);
         });
-    };
-
-    /**
-     * Returns the maximum value in the enumerable sequence by using the specified comparer to compare values.
-     * @param comparer Comparer used to determine the maximum value.
-     * @return Maximum value in the sequence.
-     */
-    EnumerablePrototype.max = function(selector) {
-        if(selector) {
-            return this.select(selector).max();
-        }       
-        var m, hasElement = false, e = this.getEnumerator();
-        try {
-            while (e.moveNext()) {
-                var x = e.getCurrent();
-                if (!hasElement) {
-                    m = x;
-                    hasElement = true;
-                } else {
-                    if (x > m) {
-                        m = x;
-                    }
-                }
-            }
-        } finally {
-            e.dispose();
-        }
-        if(!hasElement) { throw new Error(seqNoElements); }
-        return m;
     };
 
     /**

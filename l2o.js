@@ -9,6 +9,7 @@
     function identity (x) { return x; }
     function defaultComparer (x, y) { return x > y ? 1 : x < y ? -1 : 0; }
     function defaultEqualityComparer(x, y) { return x === y; }
+    function defaultSerializer(x) { return x.toString(); }
 
     var seqNoElements = 'Sequence contains no elements.';
     var invalidOperation = 'Invalid operation';
@@ -59,10 +60,10 @@
 
         function aggregate (seed, func, resultSelector) {
             resultSelector || (resultSelector = identity);
-            var accumulate = seed, enumerator = this.getEnumerator();
+            var accumulate = seed, enumerator = this.getEnumerator(), i = 0;
             try {
                 while (enumerator.moveNext()) {
-                    accumulate = func(accumulate, enumerator.getCurrent());
+                    accumulate = func(accumulate, enumerator.getCurrent(), i++, this);
                 }
             } finally {
                 enumerator.dispose();
@@ -71,14 +72,14 @@
         }
 
         function aggregate1 (func) {
-            var accumulate, enumerator = this.getEnumerator();
+            var accumulate, enumerator = this.getEnumerator(), i = 0;
             try {
                 if (!enumerator.moveNext()) {
                     throw new Error(seqNoElements);
                 }
                 accumulate = enumerator.getCurrent();
                 while (enumerator.moveNext()) {
-                    accumulate = func(accumulate, enumerator.getCurrent());
+                    accumulate = func(accumulate, enumerator.getCurrent(), i++, this);
                 }
             } finally {
                 enumerator.dispose();
@@ -86,16 +87,44 @@
             return accumulate;
         }
 
+        /**
+         * Applies an accumulator function over a sequence. The specified seed value is used as the initial accumulator value, and the optional function is used to select the result value.
+         * @param seed The initial accumulator value.
+         * @param func An accumulator function to be invoked on each element.
+         * @resultSelector A function to transform the final accumulator value into the result value.
+         * @return The transformed final accumulator value.
+         */
         EnumerablePrototype.aggregate = function(/* seed, func, resultSelector */) {
             var f = arguments.length === 1 ? aggregate1 : aggregate;
             return f.apply(this, arguments);
         };
 
-        EnumerablePrototype.all = function (predicate) {
-            var enumerator = this.getEnumerator();
+        /**
+         * Apply a function against an accumulator and each value of the sequence (from left-to-right) as to reduce it to a single value.
+         * @param {Function} func Function to execute on each value in the sequence, taking four arguments:
+         *  previousValue The value previously returned in the last invocation of the callback, or initialValue, if supplied. 
+         *  currentValue The current element being processed in the sequence.
+         *  index The index of the current element being processed in the sequence.
+         *  sequence The sequence reduce was called upon.
+         * @param initialValue Object to use as the first argument to the first call of the callback.
+         * @return The transformed final accumulator value.
+         */
+        EnumerablePrototype.reduce = function (/*func, seed */) {
+            return arguments.length === 2 ? 
+                aggregate.call(this, arguments[1], arguments[0]) :
+                aggregate1.apply(this, arguments);
+        };
+
+        /**
+         * Determines whether all elements of a sequence satisfy a condition.
+         * @param {Function} predicate A function to test each element for a condition.
+         * @return {Boolean} true if every element of the source sequence passes the test in the specified predicate, or if the sequence is empty; otherwise, false.
+         */
+        EnumerablePrototype.all = EnumerablePrototype.every = function (predicate) {
+            var enumerator = this.getEnumerator(), thisP = arguments[1];
             try {
                 while (enumerator.moveNext()) {
-                    if (!predicate(enumerator.getCurrent())) {
+                    if (!predicate(enumerator.getCurrent(), thisP)) {
                         return false;
                     }
                 }
@@ -105,11 +134,16 @@
             return true;
         }; 
 
-        EnumerablePrototype.any = function(predicate) {
-            var enumerator = this.getEnumerator();
+        /**
+         * Determines whether any element of a sequence satisfies a condition if given, else if any items are in the sequence.
+         * @param {Function} [predicate] An optional function to test each element for a condition.
+         * @return true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.
+         */
+        EnumerablePrototype.any = EnumerablePrototype.some = function(predicate) {
+            var enumerator = this.getEnumerator(), thisP = arguments[1];
             try {
                 while (enumerator.moveNext()) {
-                    if (!predicate || predicate(enumerator.getCurrent())) {
+                    if (!predicate || predicate(enumerator.getCurrent(), thisP)) {
                         return true;
                     }
                 }
@@ -119,6 +153,11 @@
             return false;   
         }; 
 
+        /** 
+         * Computes the average of a sequence of values that are obtained by invoking a transform function on each element of the input sequence.
+         * @param {Function} [selector] An optional transform function to apply to each element.
+         * @return The average of the sequence of values.
+         */
         EnumerablePrototype.average = function(selector) {
             if (selector) {
                 return this.select(selector).average();
@@ -136,8 +175,12 @@
                 throw new Error(seqNoElements);
             }
             return sum / count;
-        };        
+        };
 
+        /** 
+         * Concatenates two sequences.
+         * @return An Enumerable that contains the concatenated elements of the two input sequences.
+         */
         EnumerablePrototype.concat = function () {
             var args = slice.call(arguments, 0);
             args.unshift(this);
@@ -176,30 +219,35 @@
         EnumerablePrototype.defaultIfEmpty = function(defaultValue) {
             var parent = this;
             return new Enumerable(function () {
-                var current, hasValue = false, enumerator;
+                var current, isFirst = true, hasDefault = false, e;
                 return enumeratorCreate(
                     function () {
-                        enumerator || (enumerator = parent.getEnumerator());
-                        if (!enumerator.moveNext()) {
-                            return false;
+                        e || (e = parent.getEnumerator());
+
+                        if (hasDefault) { return false; }
+                        if (isFirst) {
+                            isFirst = false;
+                            if (!e.moveNext()) {
+                                current = defaultValue;            
+                                hasDefault = true;
+                                return true;
+                            } else {
+                                current = e.getCurrent();
+                                return true;
+                            }
                         }
-                        hasValue = true;
-                        current = enumerator.getCurrent();
+                        if (!e.moveNext()) { return false; }
+                        current = e.getCurrent();
                         return true;
                     },
-                    function () {
-                        if (!hasValue) {
-                            return defaultValue;
-                        }
-                        return current;
-                    },
-                    function () { enumerator.dispose(); }
+                    function () { return current; },
+                    function () { e && e.dispose(); }
                 );
             });
         };
 
         function arrayIndexOf (item, comparer) {
-            comparer || (comparer = defaultComparer);
+            comparer || (comparer = defaultEqualityComparer);
             var idx = this.length;
             while (idx--) {
                 if (comparer(this[idx], item)) {
@@ -221,7 +269,7 @@
         EnumerablePrototype.distinct = function(comparer) {
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
-            return Enumerable(function () {
+            return new Enumerable(function () {
                 var current, map = [], enumerator;
                 return enumeratorCreate(
                     function () {
@@ -256,9 +304,14 @@
             var parent = this;
             return new Enumerable(function () {
                 var current, map = [], firstEnumerator = parent.getEnumerator(), secondEnumerator;
-                while (firstEnumerator.moveNext()) {
-                    map.push(firstEnumerator.getCurrent());
+                try {
+                    while (firstEnumerator.moveNext()) {
+                        map.push(firstEnumerator.getCurrent());
+                    }                
+                } finally {
+                    firstEnumerator.dispose();
                 }
+
                 return enumeratorCreate(
                     function () {
                         secondEnumerator || (secondEnumerator = second.getEnumerator());
@@ -274,7 +327,7 @@
                         }
                     },
                     function () { return current; },
-                    function () { enumerator.dispose(); }
+                    function () { secondEnumerator && secondEnumerator.dispose(); }
                 );
             });
         };        
@@ -331,17 +384,22 @@
                     parentKey,
                     parentSerialized,
                     parentElement;
-                while (parentEnumerator.moveNext()) {
-                    parentCurrent = parentEnumerator.getCurrent();
-                    parentKey = keySelector(parentCurrent);
-                    parentSerialized = keySerializer(parentKey);
-                    if (!map[parentSerialized]) {
-                        map[parentSerialized] = [];
-                        keys.push(parentSerialized);
-                    }
-                    parentElement = elementSelector(parentCurrent);
-                    map[parentSerialized].push(parentElement);
+                try {
+                    while (parentEnumerator.moveNext()) {
+                        parentCurrent = parentEnumerator.getCurrent();
+                        parentKey = keySelector(parentCurrent);
+                        parentSerialized = keySerializer(parentKey);
+                        if (!map[parentSerialized]) {
+                            map[parentSerialized] = [];
+                            keys.push(parentSerialized);
+                        }
+                        parentElement = elementSelector(parentCurrent);
+                        map[parentSerialized].push(parentElement);
+                    }                    
+                } finally {
+                    parentEnumerator.dispose();
                 }
+
                 return enumeratorCreate(
                     function () {
                         var values;
@@ -368,8 +426,12 @@
             var parent = this;
             return new Enumerable(function () {
                 var current,  map = [], firstEnumerator = parent.getEnumerator(), secondEnumerator;
-                while (firstEnumerator.moveNext()) {
-                    map.push(firstEnumerator.getCurrent());
+                try {
+                    while (firstEnumerator.moveNext()) {
+                        map.push(firstEnumerator.getCurrent());
+                    }                    
+                } finally {
+                    firstEnumerator.dispose();
                 }
                 return enumeratorCreate(
                     function () {
@@ -388,7 +450,7 @@
                         return current;
                     },
                     function () {
-                        enumerator.dispose();
+                        secondEnumerator && secondEnumerator.dispose();
                     }
                 );
             });
@@ -553,10 +615,8 @@
                     },
                     function () { return current; },
                     function () {
-                        if (innerEnumerator) {
-                            innerEnumerator.dispose();
-                        }
-                        outerEnumerator.dispose();   
+                        innerEnumerator && innerEnumerator.dispose();
+                        outerEnumerator && outerEnumerator.dispose();   
                     }
                 );
             });
