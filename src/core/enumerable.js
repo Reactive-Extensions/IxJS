@@ -820,9 +820,7 @@
                     },
                     function () { return current; },
                     function () {
-                        if (enumerator) {
-                            enumerator.dispose();
-                        }
+                        enumerator && enumerator.dispose();
                     }
                 );
             });
@@ -894,7 +892,13 @@
         });
     };
 
-    var enumerableReturn = Enumerable.returnValue = function (value) {
+    /**
+     * Returns a sequence with a single element.
+     * 
+     * @param value Single element of the resulting sequence.
+     * @return Sequence with a single element.
+     */
+    Enumerable.returnValue = function (value) {
         return new Enumerable(function () {
             var done = false;
             return enumeratorCreate(
@@ -902,15 +906,14 @@
                     if (done) {
                         return false;
                     }
-                    done = true;
-                    return true;
+                    return done = true;
                 },
                 function () {
                     return value;
                 }
             );
         });
-    };  
+    };
 
     var enumerableRange = Enumerable.range = function (start, count) {
         return new Enumerable(function () {

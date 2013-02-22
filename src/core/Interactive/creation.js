@@ -1,28 +1,5 @@
 
     /**
-     * Returns a sequence with a single element.
-     * 
-     * @param value Single element of the resulting sequence.
-     * @return Sequence with a single element.
-     */
-    Enumerable.returnValue = function (value) {
-        return new Enumerable(function () {
-            var done = false;
-            return enumeratorCreate(
-                function () {
-                    if (done) {
-                        return false;
-                    }
-                    return done = true;
-                },
-                function () {
-                    return value;
-                }
-            );
-        });
-    };
-
-    /**
      * Returns a sequence that throws an exception upon enumeration.
      * 
      * @param exception Exception to throw upon enumerating the resulting sequence.

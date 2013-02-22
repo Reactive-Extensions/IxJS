@@ -27,12 +27,13 @@ and limitations under the License.
         noNext = root.assertionHelper.noNext,
         hasNext = root.assertionHelper.hasNext;
 
-    function sequenceEqual(first, second) {
+    function sequenceEqual(first, second, comparer) {
+        comparer || (comparer = function (x, y) { return x === y; });
     	if (first.length !== second.length) {
     		return false;
     	}
     	for(var i = 0, len = first.length; i < len; i++) {
-    		if (first[i] !== second[i]) {
+    		if (!comparer(first[i], second[i])) {
     			return false;
     		}
     	}
@@ -40,105 +41,6 @@ and limitations under the License.
     }
 
     QUnit.module('Enumerable Tests');
-
-    test('Select_Empty', function () {
-        var xs = Enumerable.empty();
-
-        var res = xs.select(function () {
-            ok(false);
-        });
-
-        var e = res.getEnumerator();
-
-        noNext(e);
-    });
-
-    test('Select_Multiple', function () {
-        var xs = Enumerable.range(0, 5);
-
-        var res = xs.select(function (x) {
-            return x + x;
-        });
-
-        ok(res.sequenceEqual(Enumerable.fromArray([0,2,4,6,8])));
-    });
-
-    test('Select_Error', function () {
-        var xs = Enumerable.throwException(new Error());
-
-        var res = xs.select(function (x) {
-            ok(false);
-        });
-
-        var e = res.getEnumerator();
-        raises(function () { e.moveNext(); });
-    });
-
-     test('Select_Throws', function () {
-        var xs = Enumerable.range(0, 5);
-        var i = 0;
-
-        var res = xs.select(function (x) {
-            if (i++ === 2) {
-                throw new Error();
-            }
-            return x;
-        });
-
-        var e = res.getEnumerator();
-        hasNext(e, 0);
-        hasNext(e, 1);
-        raises(function () { e.moveNext(); });
-    });
-   
-    test('Where_Empty', function () {
-        var xs = Enumerable.empty();
-
-        var res = xs.select(function () {
-            ok(false);
-        });
-
-        var e = res.getEnumerator();
-
-        noNext(e);
-    });
-
-    test('Where_Multiple', function () {
-        var xs = Enumerable.range(0, 5);
-
-        var res = xs.where(function (x) {
-            return x % 2 === 0;
-        });
-
-        ok(res.sequenceEqual(Enumerable.fromArray([0,2,4])));
-    });
-
-      test('Where_Error', function () {
-        var xs = Enumerable.throwException(new Error());
-
-        var res = xs.where(function (x) {
-            ok(false);
-        });
-
-        var e = res.getEnumerator();
-        raises(function () { e.moveNext(); });
-    });
-
-     test('Where_Throws', function () {
-        var xs = Enumerable.range(0, 5);
-        var i = 0;
-
-        var res = xs.where(function (x) {
-            if (i++ === 2) {
-                throw new Error();
-            }
-            return x % 2 === 0;
-        });
-
-        var e = res.getEnumerator();
-        hasNext(e, 0);
-        raises(function () { e.moveNext(); });
-    });
 
     test('Aggregate_Func_Empty', function () {
         var xs = Enumerable.empty();
@@ -725,6 +627,66 @@ and limitations under the License.
         ok(res.sequenceEqual(Enumerable.fromArray([4,3,2,1,0])));
     });
 
+    test('Select_Empty', function () {
+        var xs = Enumerable.empty();
+
+        var res = xs.select(function () {
+            ok(false);
+        });
+
+        var e = res.getEnumerator();
+
+        noNext(e);
+    });
+
+    test('Select_Multiple', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.select(function (x) {
+            return x + x;
+        });
+
+        ok(res.sequenceEqual(Enumerable.fromArray([0,2,4,6,8])));
+    });
+
+    test('Select_Error', function () {
+        var xs = Enumerable.throwException(new Error());
+
+        var res = xs.select(function (x) {
+            ok(false);
+        });
+
+        var e = res.getEnumerator();
+        raises(function () { e.moveNext(); });
+    });
+
+     test('Select_Throws', function () {
+        var xs = Enumerable.range(0, 5);
+        var i = 0;
+
+        var res = xs.select(function (x) {
+            if (i++ === 2) {
+                throw new Error();
+            }
+            return x;
+        });
+
+        var e = res.getEnumerator();
+        hasNext(e, 0);
+        hasNext(e, 1);
+        raises(function () { e.moveNext(); });
+    });
+
+    test('SelectMany_1', function () {
+        var xs = Enumerable.range(1, 3);
+
+        var res = xs.selectMany(function (x) {
+            return Enumerable.range(1, x);
+        });
+
+        ok(res.sequenceEqual(Enumerable.fromArray([1,1,2,1,2,3])));
+    });
+
     test('SequenceEqual', function () {
         var xs = Enumerable.range(0, 5);
         var ys = Enumerable.range(0, 5);
@@ -810,5 +772,271 @@ and limitations under the License.
 
         ok(res.sequenceEqual(Enumerable.range(2, 3)));
     });
+
+    test('SkipWhile_None', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.skipWhile(function (x) { return x < 5; });
+
+        var e = res.getEnumerator();
+        noNext(e);
+    });
+
+    test('SkipWhile_Some', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.skipWhile(function (x) { return x < 2; });
+
+        ok(res.sequenceEqual(Enumerable.fromArray([2,3,4])));
+    });
+
+    test('Sum_Empty', function () {
+        var xs = Enumerable.empty();
+
+        var res = xs.sum();
+
+        equal(res, 0);
+    });
+
+    test('Sum_Some', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.sum();
+
+        equal(res, 10);
+    });    
+
+    test('Take_Zero', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.take(5);
+
+        ok(res.sequenceEqual(xs));
+    });
+
+    test('Take_Multiple', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.take(2);
+
+        ok(res.sequenceEqual(Enumerable.range(0, 2)));
+    });
+
+    test('Takehile_None', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.takeWhile(function (x) { return x > 5; });
+
+        var e = res.getEnumerator();
+        noNext(e);
+    });
+
+    test('TakeWhile_Some', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.takeWhile(function (x) { return x % 2 === 0; });
+
+        ok(res.sequenceEqual(Enumerable.fromArray([0])));
+    });
+
+    test('ThenBy_1', function () {
+        var xs = Enumerable.fromArray([ "grape", "passionfruit", "banana", "mango", 
+                              "orange", "raspberry", "apple", "blueberry" ]);
+
+        var res = xs
+            .orderBy(function (x) { return x.length; })
+            .thenBy(function (x) { return x; });
+
+        ok(res.sequenceEqual(Enumerable.fromArray([
+            'apple',
+            'grape',
+            'mango',
+            'banana',
+            'orange',
+            'blueberry',
+            'raspberry',
+            'passionfruit'
+        ])));
+    });
+
+    test('ToArray_1', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.toArray();
+
+        ok(sequenceEqual([0,1,2,3,4], res));
+    });
+
+    test('Union_1', function () {
+        var xs = Enumerable.fromArray([ 5, 3, 9, 7, 5, 9, 3, 7 ]);
+        var ys = Enumerable.fromArray([ 8, 3, 6, 4, 4, 9, 1, 0 ]);
+
+        var res = xs.union(ys);
+
+        ok(res.sequenceEqual(Enumerable.fromArray([5, 3, 9, 7, 8, 6, 4, 1, 0])));
+    });
+
+    test('Union_2', function () {
+        function comparer(x, y) { return x.name === y.name && x.code === y.code; }
+
+        var xs = Enumerable.fromArray([{ name: 'apple', code: 9 }, { name: 'orange', code : 4 } ]);
+        var ys = Enumerable.fromArray([{ name: 'apple', code: 9 }, { name: 'lemon', code: 12 } ]);
+
+        var res = xs.union(ys, comparer);
+
+        ok(sequenceEqual(
+            res.toArray(), 
+            [
+                { name: 'apple', code: 9 },
+                { name: 'orange', code : 4 },
+                { name: 'lemon', code: 12 }
+            ],
+            comparer));
+    });
+
+    test('Where_Empty', function () {
+        var xs = Enumerable.empty();
+
+        var res = xs.select(function () {
+            ok(false);
+        });
+
+        var e = res.getEnumerator();
+
+        noNext(e);
+    });
+
+    test('Where_Multiple', function () {
+        var xs = Enumerable.range(0, 5);
+
+        var res = xs.where(function (x) {
+            return x % 2 === 0;
+        });
+
+        ok(res.sequenceEqual(Enumerable.fromArray([0,2,4])));
+    });
+
+      test('Where_Error', function () {
+        var xs = Enumerable.throwException(new Error());
+
+        var res = xs.where(function (x) {
+            ok(false);
+        });
+
+        var e = res.getEnumerator();
+        raises(function () { e.moveNext(); });
+    });
+
+     test('Where_Throws', function () {
+        var xs = Enumerable.range(0, 5);
+        var i = 0;
+
+        var res = xs.where(function (x) {
+            if (i++ === 2) {
+                throw new Error();
+            }
+            return x % 2 === 0;
+        });
+
+        var e = res.getEnumerator();
+        hasNext(e, 0);
+        raises(function () { e.moveNext(); });
+    });
+
+    test('Zip', function () {
+        var xs = Enumerable.fromArray([ 1, 2, 3, 4 ]);
+        var ys = Enumerable.fromArray([ 'one', 'two', 'three' ]);
+
+        var res = xs.zip(ys, function (x, y) { return x + ' ' + y; });
+
+        ok(res.sequenceEqual(Enumerable.fromArray(['1 one', '2 two', '3 three'])));
+    });
+
+    test('Concat_1', function () {
+        var xs = Enumerable.range(0, 5);
+        var ys = Enumerable.range(5, 5);
+
+        var res = Enumerable.concat(xs, ys);
+
+        ok(res.sequenceEqual(Enumerable.range(0, 10)));
+    });
+
+    function myEnumerator() {
+        var current, values = [1,2], index = 0;
+        return Enumerator.create(
+            function () {
+                if (index < 2) {
+                    current = values[index++];
+                    return true;
+                }
+                return false;
+            },
+            function () {
+                return current;
+            });
+    }
+
+    test('Create_1', function () {
+        var hot = false;
+        var res = Enumerable.create(function () {
+            hot = true;
+            return myEnumerator();
+        });
+
+        ok(!hot);
+
+        var e = res.getEnumerator();
+        ok(hot);
+
+        hasNext(e, 1);
+        hasNext(e, 2);
+        noNext(e);
+
+        hot = false;
+        var f = res.getEnumerator();
+        ok(hot);
+    });
+
+    test('Empty_1', function () {
+        var xs = Enumerable.empty();
+
+        var res = xs.getEnumerator();
+
+        noNext(res);
+    });
+
+    test('FromArray_1', function () {
+        var xs = Enumerable.fromArray([1,2,3]);
+
+        ok(xs.sequenceEqual(Enumerable.range(1, 3)));
+    });
+
+    test('Range_1', function () {
+        var xs = Enumerable.range(0, 5);
+
+        ok(xs.sequenceEqual(Enumerable.fromArray([0,1,2,3,4])));
+    });
+
+    test('Repeat_1', function () {
+        var xs = Enumerable.repeat(42);
+
+        var res = xs.getEnumerator();
+
+        hasNext(res, 42);
+        hasNext(res, 42);
+        hasNext(res, 42);
+        hasNext(res, 42);
+        hasNext(res, 42);
+    });
+
+    test('Repeat_2', function () {
+        var xs = Enumerable.repeat(42, 2);
+
+        var res = xs.getEnumerator();
+
+        hasNext(res, 42);
+        hasNext(res, 42);
+        noNext(res);
+    });    
 
 }(this));
