@@ -949,37 +949,6 @@
         });
     };          
 
-    function swap (arr, idx1, idx2) {
-        var temp = arr[idx1];
-        arr[idx1] = arr[idx2];
-        arr[idx2] = temp;
-    }
-
-    function quickSort(array, start, end) {
-        if (start === undefined && end === undefined) {
-            start = 0;
-            end = array.length - 1;
-        }
-        var i = start, k = end;
-        if (end - start >= 1) {
-            var pivot = array[start];
-            while (k > i) {
-                while (this.compareKeys(array[i], pivot) <= 0 && i <= end && k > i) {
-                    i++;
-                }
-                while (this.compareKeys(array[k], pivot) > 0 && k >= start && k >= i) {
-                    k--;
-                }
-                if (k > i) {
-                    swap(array, i, k);
-                }
-            }
-            swap(array, start, k);
-            quickSort.call(this, array, start, k - 1);
-            quickSort.call(this, array, k + 1, end);
-        }
-    }  
-
     function EnumerableSorter (keySelector, comparer, descending, next) {
         this.keySelector = keySelector;
         this.comparer = comparer;
@@ -990,29 +959,50 @@
     EnumerableSorter.prototype = {
         computeKeys: function (elements, count) {
             this.keys = new Array(count);
-            for (var i = 0; i < count; i++) {
-                this.keys[i] = this.keySelector(elements[i]);
-            }
-            if (this.next) {
-                this.next.computeKeys(elements, count);
-            }
+            for (var i = 0; i < count; i++) { this.keys[i] = this.keySelector(elements[i]); }
+            if (this.next) { this.next.computeKeys(elements, count); }
         },
-        compareKeys: function (idx1, idx2) {
-            var n = this.comparer(this.keys[idx1], this.keys[idx2]);
-            if (n === 0) { 
-                return !this.next ? idx1 - idx2 : this.next.compareKeys(idx1, idx2);
+        compareKeys: function (index1, index2) {
+            var c = this.comparer(this.keys[index1], this.keys[index2]);
+            if (c === 0) {
+                return this.next == null ? index1 - index2 : this.next.compareKeys(index1, index2);
             }
-            return this.descending ? -n : n;
+            return this.descending ? -c : c;
         },
         sort: function (elements, count) {
             this.computeKeys(elements, count);
             var map = new Array(count);
-            for (var i = 0; i < count; i++) {
-                map[i] = i;
-            }
-            quickSort.call(this, map, 0, count - 1);
+            for (var i = 0; i < count; i++) { map[i] = i; }
+            this.quickSort(map, 0, count - 1);
             return map;
-        }
+        },
+        quickSort: function (map, left, right) {
+            do {
+                var i = left;
+                var j = right;
+                var x = map[i + ((j - i) >> 1)];
+                do {
+                    while (i < map.length && this.compareKeys(x, map[i]) > 0) i++;
+                    while (j >= 0 && this.compareKeys(x, map[j]) < 0) j--;
+                    if (i > j) break;
+                    if (i < j) {
+                        var temp = map[i];
+                        map[i] = map[j];
+                        map[j] = temp;
+                    }
+                    i++;
+                    j--;
+                } while (i <= j);
+                if (j - left <= right - i) {
+                    if (left < j) this.quickSort(map, left, j);
+                    left = i;
+                }
+                else {
+                    if (i < right) this.quickSort(map, i, right);
+                    right = j;
+                }
+            } while (left < right);
+        }     
     };
 
     var OrderedEnumerable = (function () {
@@ -1026,11 +1016,11 @@
 
         var OrderedEnumerablePrototype = OrderedEnumerable.prototype;
         OrderedEnumerablePrototype.getEnumerableSorter = function (next) {
-            var next1 = new EnumerableSorter(this.keySelector, this.comparer, this.descending, next);
-            if (this.parent) {
-                next1 = this.parent.getEnumerableSorter(next1);
+            var sorter = new EnumerableSorter(this.keySelector, this.comparer, this.descending, next);
+            if (this.parent != null) {
+                sorter = this.parent.getEnumerableSorter(sorter);
             }
-            return next1;
+            return sorter;
         };
 
         OrderedEnumerablePrototype.createOrderedEnumerable = function (keySelector, comparer, descending) {
@@ -1059,11 +1049,11 @@
         };
 
         OrderedEnumerablePrototype.thenBy = function (keySelector, comparer) {
-            return new OrderedEnumerable(this, keySelector, comparer, false);
+            return this.createOrderedEnumerable(keySelector, null, false);
         };
 
         OrderedEnumerablePrototype.thenByDescending = function (keySelector, comparer) {
-            return new OrderedEnumerable(this, keySelector, comparer, true);
+            return this.CreateOrderedEnumerable(keySelector, comparer, false);
         };
 
         return OrderedEnumerable;

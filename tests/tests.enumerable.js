@@ -857,7 +857,7 @@ and limitations under the License.
             'raspberry',
             'passionfruit'
         ])));
-    });
+    });   
 
     test('ToArray_1', function () {
         var xs = Enumerable.range(0, 5);
