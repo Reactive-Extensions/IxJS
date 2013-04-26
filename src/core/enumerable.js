@@ -1,3 +1,6 @@
+    /**
+     * Provides a set of methods to create and query Enumerable sequences.
+     */
     var Enumerable = root.Enumerable = (function () {
         function Enumerable(getEnumerator) {
             this.getEnumerator = getEnumerator;
@@ -28,6 +31,8 @@
                 while (enumerator.moveNext()) {
                     accumulate = func(accumulate, enumerator.getCurrent(), i++, this);
                 }
+            } catch (e) { 
+                throw e;
             } finally {
                 enumerator.dispose();
             }
@@ -36,10 +41,15 @@
 
         /**
          * Applies an accumulator function over a sequence. The specified seed value is used as the initial accumulator value, and the optional function is used to select the result value.
-         * @param seed The initial accumulator value.
-         * @param func An accumulator function to be invoked on each element.
-         * @resultSelector A function to transform the final accumulator value into the result value.
-         * @return The transformed final accumulator value.
+         * 
+         * @example
+         * sequence.aggregate(0, function (acc, item, index, seq) { return acc + x; });
+         * sequence.aggregate(function (acc, item, index, seq) { return acc + x; });
+         *
+         * @param {Any} seed The initial accumulator value.
+         * @param {Function} func An accumulator function to be invoked on each element.
+         * @resultSelector {Function} A function to transform the final accumulator value into the result value.
+         * @return {Any} The transformed final accumulator value.
          */
         EnumerablePrototype.aggregate = function(/* seed, func, resultSelector */) {
             var f = arguments.length === 1 ? aggregate1 : aggregate;
@@ -48,6 +58,11 @@
 
         /**
          * Apply a function against an accumulator and each value of the sequence (from left-to-right) as to reduce it to a single value.
+         *
+         * @example
+         * sequence.reduce(function (acc, x) { return acc + x; }, 0);
+         * sequence.reduce(function (acc, x) { return acc + x; });
+         *
          * @param {Function} func Function to execute on each value in the sequence, taking four arguments:
          *  previousValue The value previously returned in the last invocation of the callback, or initialValue, if supplied. 
          *  currentValue The current element being processed in the sequence.
@@ -64,46 +79,64 @@
 
         /**
          * Determines whether all elements of a sequence satisfy a condition.
+         *
+         * @example
+         * sequence.all(function (item, index, seq) { return item % 2 === 0; });
+         *
          * @param {Function} predicate A function to test each element for a condition.
          * @return {Boolean} true if every element of the source sequence passes the test in the specified predicate, or if the sequence is empty; otherwise, false.
          */
-        EnumerablePrototype.all = EnumerablePrototype.every = function (predicate) {
-            var enumerator = this.getEnumerator(), thisP = arguments[1];
+        EnumerablePrototype.all = EnumerablePrototype.every = function (predicate, thisArg) {
+            var enumerator = this.getEnumerator(), i = 0;
             try {
                 while (enumerator.moveNext()) {
-                    if (!predicate(enumerator.getCurrent(), thisP)) {
+                    if (!predicate.call(thisArg, enumerator.getCurrent(), i++, this)) {
                         return false;
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
             return true;
         }; 
 
+        EnumerablePrototype.every = EnumerablePrototype.all;
+
         /**
          * Determines whether any element of a sequence satisfies a condition if given, else if any items are in the sequence.
+         *
+         * @example
+         * sequence.any(function (item, index, seq) { return x % 2 === 0; });
+         * sequence.any();
+         *
          * @param {Function} [predicate] An optional function to test each element for a condition.
-         * @return true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.
+         * @return {Boolean} true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.
          */
-        EnumerablePrototype.any = EnumerablePrototype.some = function(predicate) {
-            var enumerator = this.getEnumerator(), thisP = arguments[1];
+        EnumerablePrototype.any = function(predicate, thisArg) {
+            var enumerator = this.getEnumerator(), i = 0;
             try {
                 while (enumerator.moveNext()) {
-                    if (!predicate || predicate(enumerator.getCurrent(), thisP)) {
+                    if (!predicate || predicate.call(thisArg, enumerator.getCurrent(), i++, this)) {
                         return true;
                     }
                 }
+            } catch(e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
             return false;   
         }; 
 
+        EnumerablePrototype.some = EnumerablePrototype.any;
+
         /** 
          * Computes the average of a sequence of values that are obtained by invoking a transform function on each element of the input sequence.
+         *
          * @param {Function} [selector] An optional transform function to apply to each element.
-         * @return The average of the sequence of values.
+         * @return {Number} The average of the sequence of values.
          */
         EnumerablePrototype.average = function(selector) {
             if (selector) {
@@ -115,6 +148,8 @@
                     count++;
                     sum += enumerator.getCurrent();
                 }
+            } catch (e) {
+                throw e;                
             } finally {
                 enumerator.dispose();
             }
@@ -126,7 +161,8 @@
 
         /** 
          * Concatenates two sequences.
-         * @return An Enumerable that contains the concatenated elements of the two input sequences.
+         * 
+         * @return {Enumerable} An Enumerable that contains the concatenated elements of the two input sequences.
          */
         EnumerablePrototype.concat = function () {
             var args = slice.call(arguments, 0);
@@ -134,6 +170,13 @@
             return enumerableConcat.apply(null, args);
         };
 
+        /**
+         * Determines whether a sequence contains a specified element by using an optional comparer function
+         *
+         * @param {Any} value The value to locate in the sequence.
+         * @param {Function} [comparer] An equality comparer function to compare values.
+         * @returns {Boolean} true if the source sequence contains an element that has the specified value; otherwise, false.
+         */
         EnumerablePrototype.contains = function(value, comparer) {
             comparer || (comparer = defaultEqualityComparer); 
             var enumerator = this.getEnumerator();
@@ -143,26 +186,46 @@
                         return true;
                     }
                 }
+            } catch (e) {
+                throw e;                
             } finally {
                 enumerator.dispose();
             }
             return false;
         };
 
-        EnumerablePrototype.count = function(predicate) {
-            var c = 0, enumerator = this.getEnumerator();
+        /**
+         * Returns a number that represents how many elements in the specified sequence satisfy a condition if specified, else the number of items in the sequence.
+         *
+         * @example
+         * sequence.count();
+         * sequence.count(function (item, index, seq) { return item % 2 === 0; });
+         *
+         * @param {Function} [predicate] A function to test each element for a condition.
+         * @returns {Number} A number that represents how many elements in the sequence satisfy the condition in the predicate function if specified, else number of items in the sequence.
+         */
+        EnumerablePrototype.count = function(predicate, thisArg) {
+            var c = 0, i = 0, enumerator = this.getEnumerator();
             try {
                 while (enumerator.moveNext()) {
-                    if (!predicate || predicate(enumerator.getCurrent())) {
+                    if (!predicate || predicate.call(thisArg, enumerator.getCurrent(), i++, this)) {
                         c++;
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
             return c;       
         };
 
+        /**
+         * Returns the elements of the specified sequence or the specified value in a singleton collection if the sequence is empty.
+         *
+         * @param {Any} [defaultValue] The value to return if the sequence is empty.
+         * @returns {Enumerable} An Enumerable that contains defaultValue if source is empty; otherwise, source.
+         */
         EnumerablePrototype.defaultIfEmpty = function(defaultValue) {
             var parent = this;
             return new Enumerable(function () {
@@ -213,6 +276,12 @@
             return true;
         }
         
+        /**
+         * Returns distinct elements from a sequence by using a specified comparer function to compare values.
+         *
+         * @param {Function} comparer a comparer function to compare the values.
+         * @returns {Enumerable} An Enumerable that contains distinct elements from the source sequence.
+         */
         EnumerablePrototype.distinct = function(comparer) {
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
@@ -238,14 +307,33 @@
             });
         };
 
+        /**
+         * Returns the element at a specified index in a sequence.
+         *
+         * @param {Number} index The zero-based index of the element to retrieve.
+         * @returns {Any} The element at the specified position in the source sequence.
+         */
         EnumerablePrototype.elementAt = function (index) {
             return this.skip(index).first();
         };
 
+        /**
+         * Returns the element at a specified index in a sequence or a default value if the index is out of range.
+         *
+         * @param {Number} index The zero-based index of the element to retrieve.
+         * @returns {Any} null if the index is outside the bounds of the source sequence; otherwise, the element at the specified position in the source sequence.
+         */
         EnumerablePrototype.elementAtOrDefault = function (index) {
             return this.skip(index).firstOrDefault();
         };
 
+        /**
+         * Produces the set difference of two sequences by using the specified comparer function to compare values.
+         *
+         * @param {Enumerable} second An Enumerable whose elements that also occur in the first sequence will cause those elements to be removed from the returned sequence.
+         * @param {Function} [comparer] A function to compare values.
+         * @returns {Enumerable} A sequence that contains the set difference of the elements of two sequences.
+         */
         EnumerablePrototype.except = function(second, comparer) {
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
@@ -254,7 +342,9 @@
                 try {
                     while (firstEnumerator.moveNext()) {
                         map.push(firstEnumerator.getCurrent());
-                    }                
+                    }
+                } catch(e) {
+                    catch(e);
                 } finally {
                     firstEnumerator.dispose();
                 }
@@ -279,6 +369,12 @@
             });
         };        
 
+        /**
+         * Returns the first element in a sequence that satisfies a specified condition if specified, else the first element.
+         *
+         * @param {Function} [predicate] A function to test each element for a condition.
+         * @returns {Any} The first element in the sequence that passes the test in the specified predicate function if specified, else the first element.
+         */
         EnumerablePrototype.first = function (predicate) {
             var enumerator = this.getEnumerator();
             try {
@@ -287,12 +383,20 @@
                     if (!predicate || predicate(current))
                         return current;
                 }
+            } catch(e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }       
             throw new Error(seqNoElements);
         };
 
+        /**
+         * Returns the first element of the sequence that satisfies an optional condition or a default value if no such element is found.
+         *
+         * @param {Function} [predicate] A function to test each element for a condition.
+         * @returns {Any} null if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
+         */
         EnumerablePrototype.firstOrDefault = function (predicate) {
             var enumerator = this.getEnumerator();
             try {
@@ -302,19 +406,34 @@
                         return current;
                     }
                 }
+            } catch(e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }       
             return null;
         };
 
-        EnumerablePrototype.forEach = function (action) {
-            var e = this.getEnumerator(),
-                i = 0;
+        /**
+         * Performs the specified action on each element of the Enumerable sequence
+         *
+         * @example
+         * sequence.forEach(function (item, index, seq) { console.log(item); });
+         *
+         * @param {Function} action The function to perform on each element of the Enumerable sequence.
+         *  action is invoked with three arguments:
+         *      the element value
+         *      the element index
+         *      the Enumerable sequence being traversed
+         */
+        EnumerablePrototype.forEach = function (action, thisArg) {
+            var e = this.getEnumerator(), i = 0;
             try {
                 while (e.moveNext()) {
-                    action(e.getCurrent(), i++);
+                    action.call(thisArg, e.getCurrent(), i++, this);
                 }
+            } catch(e) {
+                throw e;
             } finally {
                 e.dispose();
             }
