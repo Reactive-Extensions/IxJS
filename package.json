@@ -2,7 +2,7 @@
   "name": "ix",
   "title": "Interactive Extensions for JavaScript (IxJS)",
   "description": "Library for composing asynchronous and event-based operations in JavaScript",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "http://rx.codeplex.com",
   "author": {
     "name": "MS Open Tech",
@@ -20,12 +20,13 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "grunt": "~0.4.0",
-    "grunt-contrib-jshint": "~0.1.1",
-    "grunt-contrib-nodeunit": "~0.1.2",
+    "grunt-cli": "*",
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "*",
     "grunt-contrib-uglify": "*",
     "grunt-contrib-concat": "*",
-    "grunt-contrib-qunit": "*"
+    "grunt-contrib-qunit": "*",
+    "grunt-contrib-watch": "*"
   },
   "keywords": [
     "Enumerable",

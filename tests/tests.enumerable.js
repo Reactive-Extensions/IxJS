@@ -412,23 +412,23 @@ and limitations under the License.
     });    
 
     test('Except', function () {
-        var xs = Enumerable.range(0, 5);
-        var ys = Enumerable.range(3, 5);
+
+        var xs = Enumerable.fromArray([2.0, 2.1, 2.2, 2.3, 2.4, 2.5]);
+        var ys = Enumerable.fromArray([2.2]);
 
         var res = xs.except(ys);
 
-        ok(res.sequenceEqual(Enumerable.fromArray([5, 6, 7])));
+        ok(res.sequenceEqual(Enumerable.fromArray([2, 2.1, 2.3, 2.4, 2.5])));
     });
 
     test('Except_Comparer', function () {
-        var xs = Enumerable.fromArray([{value: 1}, {value: 2}]);
-        var ys = Enumerable.fromArray([{value: 2}, {value: 3}]);
+        var comparer = function (x, y) { return x.value === y.value; }
+        var xs = Enumerable.fromArray([{value: 2.0}, {value: 2.1}, {value: 2.2}, {value: 2.3}, {value: 2.4}, {value: 2.5}]);
+        var ys = Enumerable.fromArray([{value: 2.2}]);
 
-        var res = xs.except(ys, function (x, y) { return x.value === y.value; });
+        var res = xs.except(ys, comparer);
 
-        var e = res.getEnumerator();
-        ok(e.moveNext());
-        equal(3, e.getCurrent().value);
+        ok(res.sequenceEqual(Enumerable.fromArray([{value: 2}, {value: 2.1}, {value: 2.3}, {value: 2.4}, {value: 2.5}]), comparer));
     });
 
     test('First_Empty', function () {

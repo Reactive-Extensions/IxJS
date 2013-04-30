@@ -338,25 +338,25 @@
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var current, map = [], firstEnumerator = parent.getEnumerator(), secondEnumerator;
+                var current, map = [], secondEnumerator = second.getEnumerator(), firstEnumerator;
                 try {
-                    while (firstEnumerator.moveNext()) {
-                        map.push(firstEnumerator.getCurrent());
+                    while (secondEnumerator.moveNext()) {
+                        map.push(secondEnumerator.getCurrent());
                     }
                 } catch(e) {
-                    catch(e);
+                    throw e;
                 } finally {
-                    firstEnumerator.dispose();
+                    secondEnumerator.dispose();
                 }
 
                 return enumeratorCreate(
                     function () {
-                        secondEnumerator || (secondEnumerator = second.getEnumerator());
+                        firstEnumerator || (firstEnumerator = parent.getEnumerator());
                         while (true) {
-                            if (!secondEnumerator.moveNext()) {
+                            if (!firstEnumerator.moveNext()) {
                                 return false;
                             }
-                            current = secondEnumerator.getCurrent();
+                            current = firstEnumerator.getCurrent();
                             if (arrayIndexOf.call(map, current, comparer) === -1) {
                                 map.push(current);
                                 return true;
@@ -364,7 +364,7 @@
                         }
                     },
                     function () { return current; },
-                    function () { secondEnumerator && secondEnumerator.dispose(); }
+                    function () { firstEnumerator && firstEnumerator.dispose(); }
                 );
             });
         };        
