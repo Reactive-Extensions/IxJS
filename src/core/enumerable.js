@@ -462,6 +462,8 @@
                         parentElement = elementSelector(parentCurrent);
                         map[parentSerialized].push(parentElement);
                     }                    
+                } catch(e) {
+                    throw e;
                 } finally {
                     parentEnumerator.dispose();
                 }
@@ -496,6 +498,8 @@
                     while (firstEnumerator.moveNext()) {
                         map.push(firstEnumerator.getCurrent());
                     }                    
+                } catch (e) {
+                    throw e;
                 } finally {
                     firstEnumerator.dispose();
                 }
@@ -532,6 +536,8 @@
                         value = current;
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }       
@@ -551,6 +557,8 @@
                         value = current;
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
@@ -575,6 +583,8 @@
                         }
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
@@ -601,6 +611,8 @@
                         }
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
@@ -705,8 +717,9 @@
                     return false;
                 }
                 return true;
-            }
-            finally {
+            } catch (e) {
+                throw e;
+            } finally {
                 e1.dispose();
                 e2.dispose();
             }
@@ -718,17 +731,19 @@
             }
             var enumerator = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    var current = enumerator.getCurrent();
-                    if (enumerator.moveNext()) {
-                        throw new Error(invalidOperation);
-                    }
-                    return current;
+                if (!enumerator.moveNext()) {
+                    throw new Error(seqNoElements);
                 }
+                var current = enumerator.getCurrent();
+                if (enumerator.moveNext()) {
+                    throw new Error(invalidOperation);
+                }
+                return current;
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
-            throw new Error(seqNoElements);
         };
 
         EnumerablePrototype.singleOrDefault = function (predicate) {
