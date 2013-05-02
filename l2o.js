@@ -586,6 +586,16 @@
             });
         };
 
+        /**
+         * Returns the last element of a sequence that satisfies an optional condition if specified, else the last element.
+         * 
+         * @example
+         *   seq.last();
+         *   seq.last(function (x) { return x % 2 === 0; });
+         *         
+         * @param {Function} [predicate] A function to test each element for a condition.
+         * @returns {Any} The last element in the sequence that passes the test in the specified predicate function if specified, else the last element.
+         */
         EnumerablePrototype.last = function (predicate) {
             var hasValue = false, value, enumerator = this.getEnumerator();
             try {
@@ -607,6 +617,16 @@
             throw new Error(seqNoElements);
         };
 
+        /**
+         * Returns the last element of a sequence that satisfies an optioanl condition or a null if no such element is found.
+         * 
+         * @example
+         *   seq.lastOrDefault();
+         *   seq.lastOrDefault(function (x) { return x % 2 === 0; });
+         *
+         * @param {Function} [predicate] A function to test each element for a condition.
+         * @returns {Any} null if the sequence is empty or if no elements pass the test in the predicate function; otherwise, the last element that passes the test in the predicate function if specified, else the last element.
+         */
         EnumerablePrototype.lastOrDefault = function (predicate) {
             var hasValue = false, value, enumerator = this.getEnumerator();
             try {
