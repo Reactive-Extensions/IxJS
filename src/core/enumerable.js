@@ -489,29 +489,36 @@
             });
         };
 
+        /**
+         * Produces the set intersection of two sequences by using an optional comparer fuction to compare values.
+         * @param {Enumerable} second An Enumerable whose distinct elements that also appear in the first sequence will be returned.
+         * @param {Function} [comparer] A comparer function to compare values.
+         * @returns {Enumerable} A sequence that contains the elements that form the set intersection of two sequences.
+         */
         EnumerablePrototype.intersect = function(second, comparer) {
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var current,  map = [], firstEnumerator = parent.getEnumerator(), secondEnumerator;
+                var current,  map = [], secondEnumerator = second.getEnumerator(), firstEnumerator;
                 try {
-                    while (firstEnumerator.moveNext()) {
-                        map.push(firstEnumerator.getCurrent());
+                    while (secondEnumerator.moveNext()) {
+                        map.push(secondEnumerator.getCurrent());
                     }                    
                 } catch (e) {
                     throw e;
                 } finally {
-                    firstEnumerator.dispose();
+                    secondEnumerator.dispose();
                 }
                 return enumeratorCreate(
                     function () {
-                        secondEnumerator || (secondEnumerator = second.getEnumerator());
+                        firstEnumerator || (firstEnumerator = parent.getEnumerator());
                         while (true) {
-                            if (!secondEnumerator.moveNext()) {
+                            if (!firstEnumerator.moveNext()) {
                                 return false;
                             }
-                            current = secondEnumerator.getCurrent();
-                            if (arrayRemove.call(map, current, comparer)) {
+                            var c = firstEnumerator.getCurrent();
+                            if (arrayRemove.call(map, c, comparer)) {
+                                current = c;
                                 return true;
                             }
                         }
@@ -520,12 +527,22 @@
                         return current;
                     },
                     function () {
-                        secondEnumerator && secondEnumerator.dispose();
+                        firstEnumerator && firstEnumerator.dispose();
                     }
                 );
             });
         };
 
+        /**
+         * Returns the last element of a sequence that satisfies an optional condition if specified, else the last element.
+         * 
+         * @example
+         *   seq.last();
+         *   seq.last(function (x) { return x % 2 === 0; });
+         *         
+         * @param {Function} [predicate] A function to test each element for a condition.
+         * @returns {Any} The last element in the sequence that passes the test in the specified predicate function if specified, else the last element.
+         */
         EnumerablePrototype.last = function (predicate) {
             var hasValue = false, value, enumerator = this.getEnumerator();
             try {
@@ -547,6 +564,16 @@
             throw new Error(seqNoElements);
         };
 
+        /**
+         * Returns the last element of a sequence that satisfies an optioanl condition or a null if no such element is found.
+         * 
+         * @example
+         *   seq.lastOrDefault();
+         *   seq.lastOrDefault(function (x) { return x % 2 === 0; });
+         *
+         * @param {Function} [predicate] A function to test each element for a condition.
+         * @returns {Any} null if the sequence is empty or if no elements pass the test in the predicate function; otherwise, the last element that passes the test in the predicate function if specified, else the last element.
+         */
         EnumerablePrototype.lastOrDefault = function (predicate) {
             var hasValue = false, value, enumerator = this.getEnumerator();
             try {

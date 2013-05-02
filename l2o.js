@@ -515,6 +515,8 @@
                         parentElement = elementSelector(parentCurrent);
                         map[parentSerialized].push(parentElement);
                     }                    
+                } catch(e) {
+                    throw e;
                 } finally {
                     parentEnumerator.dispose();
                 }
@@ -540,27 +542,36 @@
             });
         };
 
+        /**
+         * Produces the set intersection of two sequences by using an optional comparer fuction to compare values.
+         * @param {Enumerable} second An Enumerable whose distinct elements that also appear in the first sequence will be returned.
+         * @param {Function} [comparer] A comparer function to compare values.
+         * @returns {Enumerable} A sequence that contains the elements that form the set intersection of two sequences.
+         */
         EnumerablePrototype.intersect = function(second, comparer) {
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var current,  map = [], firstEnumerator = parent.getEnumerator(), secondEnumerator;
+                var current,  map = [], secondEnumerator = second.getEnumerator(), firstEnumerator;
                 try {
-                    while (firstEnumerator.moveNext()) {
-                        map.push(firstEnumerator.getCurrent());
+                    while (secondEnumerator.moveNext()) {
+                        map.push(secondEnumerator.getCurrent());
                     }                    
+                } catch (e) {
+                    throw e;
                 } finally {
-                    firstEnumerator.dispose();
+                    secondEnumerator.dispose();
                 }
                 return enumeratorCreate(
                     function () {
-                        secondEnumerator || (secondEnumerator = second.getEnumerator());
+                        firstEnumerator || (firstEnumerator = parent.getEnumerator());
                         while (true) {
-                            if (!secondEnumerator.moveNext()) {
+                            if (!firstEnumerator.moveNext()) {
                                 return false;
                             }
-                            current = secondEnumerator.getCurrent();
-                            if (arrayRemove.call(map, current, comparer)) {
+                            var c = firstEnumerator.getCurrent();
+                            if (arrayRemove.call(map, c, comparer)) {
+                                current = c;
                                 return true;
                             }
                         }
@@ -569,7 +580,7 @@
                         return current;
                     },
                     function () {
-                        secondEnumerator && secondEnumerator.dispose();
+                        firstEnumerator && firstEnumerator.dispose();
                     }
                 );
             });
@@ -585,6 +596,8 @@
                         value = current;
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }       
@@ -604,6 +617,8 @@
                         value = current;
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
@@ -628,6 +643,8 @@
                         }
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
@@ -654,6 +671,8 @@
                         }
                     }
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
@@ -758,8 +777,9 @@
                     return false;
                 }
                 return true;
-            }
-            finally {
+            } catch (e) {
+                throw e;
+            } finally {
                 e1.dispose();
                 e2.dispose();
             }
@@ -771,17 +791,19 @@
             }
             var enumerator = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    var current = enumerator.getCurrent();
-                    if (enumerator.moveNext()) {
-                        throw new Error(invalidOperation);
-                    }
-                    return current;
+                if (!enumerator.moveNext()) {
+                    throw new Error(seqNoElements);
                 }
+                var current = enumerator.getCurrent();
+                if (enumerator.moveNext()) {
+                    throw new Error(invalidOperation);
+                }
+                return current;
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
-            throw new Error(seqNoElements);
         };
 
         EnumerablePrototype.singleOrDefault = function (predicate) {
