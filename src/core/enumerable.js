@@ -277,9 +277,10 @@
         }
         
         /**
-         * Returns distinct elements from a sequence by using a specified comparer function to compare values.
+         * Returns distinct elements from a sequence by using an optional comparer function to compare values.
          *
-         * @param {Function} comparer a comparer function to compare the values.
+         * 
+         * @param {Function} [comparer] a comparer function to compare the values.
          * @returns {Enumerable} An Enumerable that contains distinct elements from the source sequence.
          */
         EnumerablePrototype.distinct = function(comparer) {
@@ -294,15 +295,16 @@
                             if (!enumerator.moveNext()) {
                                 return false;
                             }
-                            current = enumerator.getCurrent();
-                            if (arrayIndexOf.call(map, current, comparer) === -1) {
+                            var c = enumerator.getCurrent();
+                            if (arrayIndexOf.call(map, c, comparer) === -1) {
+                                current = c;
                                 map.push(current);
                                 return true;
                             }
                         }
                     },
                     function () { return current; },
-                    function () { enumerator.dispose(); }
+                    function () { enumerator && enumerator.dispose(); }
                 );
             });
         };
@@ -439,28 +441,80 @@
             }
         }; 
 
-        EnumerablePrototype.groupBy = function (keySelector, elementSelector, resultSelector, keySerializer) {
+        if (!Array.prototype.indexOf) {
+            Array.prototype.indexOf = function indexOf(searchElement) {
+                var t = Object(this);
+                var len = t.length >>> 0;
+                if (len === 0) {
+                    return -1;
+                }
+                var n = 0;
+                if (arguments.length > 1) {
+                    n = Number(arguments[1]);
+                    if (n !== n) {
+                        n = 0;
+                    } else if (n !== 0 && n != Infinity && n !== -Infinity) {
+                        n = (n > 0 || -1) * Math.floor(Math.abs(n));
+                    }
+                }
+                if (n >= len) {
+                    return -1;
+                }
+                var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
+                for (; k < len; k++) {
+                    if (k in t && t[k] === searchElement) {
+                        return k;
+                    }
+                }
+                return -1;
+            };
+        }        
+
+        function WeakMap () {
+            this.keys = [];
+            this.values = [];
+            this.length = 0;
+        }
+
+        WeakMap.prototype.get = function (key) {
+            var idx = this.keys.indexOf(key);
+            return idx !== -1 ? this.values[idx] : undefined;
+        };
+
+        WeakMap.prototype.set = function (key, value) {
+            var idx = this.keys.indexOf(key);
+            if (idx === -1) {
+                this.keys.push(key);
+                this.values.push(value);
+                this.length++;
+            } else {
+                this.values[idx] = value;
+            }
+        };
+
+        WeakMap.prototype.has = function (key) {
+            return this.keys.indexOf(key) !== -1; 
+        };
+
+        EnumerablePrototype.groupBy = function (keySelector, elementSelector, resultSelector) {
             elementSelector || (elementSelector = identity);
-            keySerializer || (keySerializer = defaultSerializer);
             var parent = this;
             return new Enumerable(function () {
-                var map = {}, keys = [], index = 0, value, key,
+                var map = new WeakMap(), keys = [], index = 0, value, key,
                     parentEnumerator = parent.getEnumerator(), 
                     parentCurrent,
                     parentKey,
-                    parentSerialized,
                     parentElement;
                 try {
                     while (parentEnumerator.moveNext()) {
                         parentCurrent = parentEnumerator.getCurrent();
                         parentKey = keySelector(parentCurrent);
-                        parentSerialized = keySerializer(parentKey);
-                        if (!map[parentSerialized]) {
-                            map[parentSerialized] = [];
-                            keys.push(parentSerialized);
+                        if (!map.has(parentKey)) {
+                            map.set(parentKey, enumerableEmpty());
+                            keys.push(parentKey);
                         }
                         parentElement = elementSelector(parentCurrent);
-                        map[parentSerialized].push(parentElement);
+                        map.get(parentKey).concat(enumerableReturn(parentElement));
                     }                    
                 } catch(e) {
                     throw e;
@@ -473,7 +527,7 @@
                         var values;
                         if (index < keys.length) {
                             key = keys[index++];
-                            values = enumerableFromArray(map[key]);
+                            values = map.get(key);
                             if (!resultSelector) {
                                 values.key = key;
                                 value = values;
@@ -593,6 +647,11 @@
             return hasValue ? value : null;
         };
 
+        /**
+         * Invokes a transform function on each element of a generic sequence and returns the maximum resulting value.
+         * @param {Function} [selector] A transform function to apply to each element.
+         * @returns {Any} The maximum value in the sequence.
+         */ 
         EnumerablePrototype.max = function(selector) {
             if(selector) {
                 return this.select(selector).max();
@@ -621,6 +680,12 @@
             return m;
         };        
 
+        /**
+         * Invokes an optional transform function on each element of a generic sequence and returns the minimum resulting value.
+         *
+         * @param {Function} [selector] A transform function to apply to each element.
+         * @returns {Any} The minimum value in the sequence.
+         */
         EnumerablePrototype.min = function(selector) {
             if(selector) {
                 return this.select(selector).min();
@@ -649,27 +714,55 @@
             return m;
         };         
 
+        /** 
+         * Sorts the elements of a sequence in ascending order by using an optional comparer.
+         *
+         * @param {Function} keySelector A function to extract a key from an element.
+         * @param {Function} [comparer] An optional comparer function to compare keys.
+         * @returns {Enumerable} An Enumerable whose elements are sorted according to a key.
+         */
         EnumerablePrototype.orderBy = function (keySelector, comparer) {
             return new OrderedEnumerable(this, keySelector, comparer, false);
         };
 
+        /**
+         * Sorts the elements of a sequence in descending order by using a specified comparer.
+         * 
+         * @param {Function} keySelector A function to extract a key from an element.
+         * @param {Function} [comparer] An optional comparer function to compare keys.
+         * @returns {Enumerable} An Enumerable whose elements are sorted in descending order according to a key.
+         */
         EnumerablePrototype.orderByDescending = function (keySelector, comparer) {
             return new OrderedEnumerable(this, keySelector, comparer, true);
         };
 
+        /** 
+         * Inverts the order of the elements in a sequence.
+         *
+         * @returns {Enumerable} A sequence whose elements correspond to those of the input sequence in reverse order.
+         */
         EnumerablePrototype.reverse = function () {
             var arr = [], enumerator = this.getEnumerator();
             try {
                 while (enumerator.moveNext()) {
                     arr.unshift(enumerator.getCurrent());
                 }
+            } catch (e) {
+                throw e;
             } finally {
                 enumerator.dispose();
             }
             return enumerableFromArray(arr);
         };        
 
-        EnumerablePrototype.select = function (selector) {
+        /**
+         * Projects each element of a sequence into a new form by incorporating the element's index.
+         * 
+         * @param {Function} selector A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
+         * @param {Any} [thisArg] An optional scope for the selector.
+         * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
+         */
+        EnumerablePrototype.select = function (selector, thisArg) {
             var parent = this;
             return new Enumerable(function () {
                 var current, index = 0, enumerator;
@@ -679,15 +772,35 @@
                         if (!enumerator.moveNext()) {
                             return false;
                         }
-                        current = selector(enumerator.getCurrent(), index++);
+                        current = selector.call(thisArg, enumerator.getCurrent(), index++, parent);
                         return true;
                     },
                     function () { return current; },
-                    function () { enumerator.dispose(); }
+                    function () { enumerator && enumerator.dispose(); }
                 );
             });
         };
 
+        /**
+         * Projects each element of a sequence into a new form by incorporating the element's index.
+         * 
+         * @param {Function} selector A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
+         * @param {Any} [thisArg] An optional scope for the selector.
+         * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
+         */
+        EnumerablePrototype.map = EnumerablePrototype.select;
+
+        /**
+         * Projects each element of a sequence to an Enumerable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein. The index of each source element is used in the intermediate projected form of that element.
+         * 
+         * @example
+         *   seq.selectMany(selector);
+         *   seq.selectMany(collectionSelector, resultSelector);
+         *
+         * @param {Function} collectionSelector A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
+         * @param {Function} [resultSelector] An optional transform function to apply to each element of the intermediate sequence.
+         * @returns {Enumerable} An Enumerable whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of source and then mapping each of those sequence elements and their corresponding source element to a result element.
+         */
         EnumerablePrototype.selectMany = function (collectionSelector, resultSelector) {
             var parent = this;
             return new Enumerable(function () {
@@ -701,7 +814,7 @@
                                     return false;
                                 }
 
-                                innerEnumerator = collectionSelector(outerEnumerator.getCurrent()).getEnumerator();
+                                innerEnumerator = collectionSelector(outerEnumerator.getCurrent(), index++).getEnumerator();
                             }
                             if (innerEnumerator.moveNext()) {
                                 current = innerEnumerator.getCurrent();
@@ -814,15 +927,15 @@
                         return true;
                     },
                     function () { return current; },
-                    function () { enumerator.dispose(); }
+                    function () { enumerator && enumerator.dispose(); }
                 );
             });
         };
 
-        EnumerablePrototype.skipWhile = function (selector) {
+        EnumerablePrototype.skipWhile = function (selector, thisArg) {
             var parent = this;
             return new Enumerable(function () {
-                var current, skipped = false, enumerator;
+                var current, skipped = false, enumerator, index = 0;
                 return enumeratorCreate(
                     function () {
                         enumerator || (enumerator = parent.getEnumerator());
@@ -831,7 +944,7 @@
                                 if (!enumerator.moveNext()) {
                                     return false;
                                 }
-                                if (!selector(enumerator.getCurrent())) {
+                                if (!selector.call(thisArg, enumerator.getCurrent(), index++, parent)) {
                                     current = enumerator.getCurrent();
                                     return true;
                                 }
@@ -845,7 +958,7 @@
                         return true;
                     },
                     function () { return current;  },
-                    function () { enumerator.dispose(); }
+                    function () { enumerator && enumerator.dispose(); }
                 );
             });
         };
@@ -884,12 +997,12 @@
                         return true;
                     },
                     function () { return current; },
-                    function () { enumerator.dispose(); }
+                    function () { enumerator && enumerator.dispose(); }
                 );
             });
         };
 
-        EnumerablePrototype.takeWhile = function (selector) {
+        EnumerablePrototype.takeWhile = function (selector, thisArg) {
             var parent = this;
             return new Enumerable(function () {
                 var current, index = 0, enumerator;
@@ -900,13 +1013,13 @@
                             return false;
                         }
                         current = enumerator.getCurrent();
-                        if (!selector(current, index++)){
+                        if (!selector.call(thisArg, current, index++, parent)){
                             return false;
                         }
                         return true;
                     },
                     function () { return current; },
-                    function () { enumerator.dispose(); }
+                    function () { enumerator && enumerator.dispose(); }
                 );
             });
         };        
@@ -924,7 +1037,7 @@
             }
         };
 
-        EnumerablePrototype.where = function (selector) {
+        EnumerablePrototype.where = function (selector, thisArg) {
             var parent = this;
             return new Enumerable(function () {
                 var current, index = 0, enumerator;
@@ -936,7 +1049,7 @@
                                 return false;
                             }
                             current = enumerator.getCurrent();
-                            if (selector(current, index++)) {
+                            if (selector.call(thisArg, current, index++, parent)) {
                                 return true;
                             }
                         }
@@ -1059,7 +1172,7 @@
      * @param value Single element of the resulting sequence.
      * @return Sequence with a single element.
      */
-    Enumerable.returnValue = function (value) {
+    var enumerableReturn = Enumerable.returnValue = function (value) {
         return new Enumerable(function () {
             var done = false;
             return enumeratorCreate(
