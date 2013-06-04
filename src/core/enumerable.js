@@ -439,68 +439,14 @@
             } finally {
                 e.dispose();
             }
-        }; 
+        };       
 
-        if (!Array.prototype.indexOf) {
-            Array.prototype.indexOf = function indexOf(searchElement) {
-                var t = Object(this);
-                var len = t.length >>> 0;
-                if (len === 0) {
-                    return -1;
-                }
-                var n = 0;
-                if (arguments.length > 1) {
-                    n = Number(arguments[1]);
-                    if (n !== n) {
-                        n = 0;
-                    } else if (n !== 0 && n != Infinity && n !== -Infinity) {
-                        n = (n > 0 || -1) * Math.floor(Math.abs(n));
-                    }
-                }
-                if (n >= len) {
-                    return -1;
-                }
-                var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
-                for (; k < len; k++) {
-                    if (k in t && t[k] === searchElement) {
-                        return k;
-                    }
-                }
-                return -1;
-            };
-        }        
-
-        function WeakMap () {
-            this.keys = [];
-            this.values = [];
-            this.length = 0;
-        }
-
-        WeakMap.prototype.get = function (key) {
-            var idx = this.keys.indexOf(key);
-            return idx !== -1 ? this.values[idx] : undefined;
-        };
-
-        WeakMap.prototype.set = function (key, value) {
-            var idx = this.keys.indexOf(key);
-            if (idx === -1) {
-                this.keys.push(key);
-                this.values.push(value);
-                this.length++;
-            } else {
-                this.values[idx] = value;
-            }
-        };
-
-        WeakMap.prototype.has = function (key) {
-            return this.keys.indexOf(key) !== -1; 
-        };
-
-        EnumerablePrototype.groupBy = function (keySelector, elementSelector, resultSelector) {
+        EnumerablePrototype.groupBy = function (keySelector, elementSelector, resultSelector, comparer) {
             elementSelector || (elementSelector = identity);
+            comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var map = new WeakMap(), keys = [], index = 0, value, key,
+                var map = new Dictionary(0, comparer), keys = [], index = 0, value, key,
                     parentEnumerator = parent.getEnumerator(), 
                     parentCurrent,
                     parentKey,
@@ -510,11 +456,11 @@
                         parentCurrent = parentEnumerator.getCurrent();
                         parentKey = keySelector(parentCurrent);
                         if (!map.has(parentKey)) {
-                            map.set(parentKey, enumerableEmpty());
+                            map.add(parentKey, []);
                             keys.push(parentKey);
                         }
                         parentElement = elementSelector(parentCurrent);
-                        map.get(parentKey).concat(enumerableReturn(parentElement));
+                        map.get(parentKey).push(parentElement);
                     }                    
                 } catch(e) {
                     throw e;
@@ -527,7 +473,7 @@
                         var values;
                         if (index < keys.length) {
                             key = keys[index++];
-                            values = map.get(key);
+                            values = enumerableFromArray(map.get(key));
                             if (!resultSelector) {
                                 values.key = key;
                                 value = values;
@@ -539,6 +485,38 @@
                         return false;
                     },
                     function () { return value; }
+                );
+            });
+        };
+
+        EnumerablePrototype.groupJoin = function (inner, outerKeySelector, innerKeySelector, resultSelector, comparer) {
+            var outer = this;
+            comparer || (comparer = defaultEqualityComparer);
+            return new Enumerable(function () {
+                var e, lookup, current;
+
+                return enumeratorCreate(
+                    function () {
+                        e || (e = outer.getEnumerator());
+                        if (!lookup) {
+                            lookup = inner.toLookup(innerKeySelector, identity, comparer);
+                        }
+
+                        if (!e.moveNext()) {
+                            return false;
+                        }
+
+                        var c = e.getCurrent();
+                        var innerElement = lookup.get(outerKeySelector(c));
+                        current = resultSelector(c, innerElement);
+                        return true;
+                    },
+                    function () {
+                        return current;
+                    }, 
+                    function () {
+                        e && e.dispose();
+                    }
                 );
             });
         };
@@ -1032,6 +1010,31 @@
                     results.push(e.getCurrent());
                 }
                 return results;
+            } catch (e) {
+                throw e;
+            } finally {
+                e.dispose();
+            }
+        };
+
+        EnumerablePrototype.toLookup = function (keySelector, elementSelector, comparer) {
+            elementSelector || (elementSelector = identity);
+            comparer || (comparer = defaultEqualityComparer);
+            var map = new Dictionary(0, comparer),
+                e = this.getEnumerator();
+            try {
+                while (e.moveNext()) {
+                    var c = e.getCurrent(),
+                        key = keySelector(c);
+                        elem = elementSelector(c);
+                    if (!map.has(key)) {
+                        map.set(key, []);
+                    }
+                    map.get(key).push(elem);
+                }
+                return new Lookup(map);
+            } catch (e) {
+                throw e;
             } finally {
                 e.dispose();
             }

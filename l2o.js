@@ -26,7 +26,52 @@
         child.super_ = parent.prototype;
         return child;
     };
-    ;    var Enumerator = root.Enumerator = function (moveNext, getCurrent, dispose) {
+    ;    function arrayIndexOf (arr, value, comparer) {
+        comparer || (comparer = defaultEqualityComparer);
+        for (var i  = 0, len = arr.length; i < len; i++) {
+            if (comparer(arr[i], value)) { return i; }
+        }
+        return -1;
+    }
+
+    var InternalMap = (function () {
+        function InternalMap (comparer) {
+            this.comparer = comparer || defaultEqualityComparer;
+            this.keys = [];
+            this.values = [];
+        }
+
+        var InternalMapPrototype = InternalMap.prototype;
+        InternalMapPrototype.get = function (key) {
+            var idx = arrayIndexOf(this.keys, key, this.comparer);
+            return idx !== -1 ? this.values[idx] : undefined;
+        };
+
+        InternalMapPrototype.set = function (key, value) {
+            var idx = arrayIndexOf(this.keys, key, this.comparer);
+            if (idx === -1) {
+                this.keys.push(key);
+                this.values.push(value);
+            } else {
+                this.values[idx] = value;
+            }
+        };
+
+        InternalMapPrototype.has = function (key) {
+            return arrayIndexOf(this.keys, key, this.comparer) !== -1; 
+        };
+
+        InternalMapPrototype['delete'] = function (key) {
+            var i = arrayIndexOf(this.keys, key, this.comparer);
+            if (i !== -1) {
+                this.keys.splice(i, 1);
+                this.values.splice(i, 1);
+            } 
+        };
+
+        return InternalMap; 
+    }());
+;    var Enumerator = root.Enumerator = function (moveNext, getCurrent, dispose) {
         this.moveNext = moveNext;
         this.getCurrent = getCurrent;
         this.dispose = dispose;
@@ -492,68 +537,14 @@
             } finally {
                 e.dispose();
             }
-        }; 
+        };       
 
-        if (!Array.prototype.indexOf) {
-            Array.prototype.indexOf = function indexOf(searchElement) {
-                var t = Object(this);
-                var len = t.length >>> 0;
-                if (len === 0) {
-                    return -1;
-                }
-                var n = 0;
-                if (arguments.length > 1) {
-                    n = Number(arguments[1]);
-                    if (n !== n) {
-                        n = 0;
-                    } else if (n !== 0 && n != Infinity && n !== -Infinity) {
-                        n = (n > 0 || -1) * Math.floor(Math.abs(n));
-                    }
-                }
-                if (n >= len) {
-                    return -1;
-                }
-                var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
-                for (; k < len; k++) {
-                    if (k in t && t[k] === searchElement) {
-                        return k;
-                    }
-                }
-                return -1;
-            };
-        }        
-
-        function WeakMap () {
-            this.keys = [];
-            this.values = [];
-            this.length = 0;
-        }
-
-        WeakMap.prototype.get = function (key) {
-            var idx = this.keys.indexOf(key);
-            return idx !== -1 ? this.values[idx] : undefined;
-        };
-
-        WeakMap.prototype.set = function (key, value) {
-            var idx = this.keys.indexOf(key);
-            if (idx === -1) {
-                this.keys.push(key);
-                this.values.push(value);
-                this.length++;
-            } else {
-                this.values[idx] = value;
-            }
-        };
-
-        WeakMap.prototype.has = function (key) {
-            return this.keys.indexOf(key) !== -1; 
-        };
-
-        EnumerablePrototype.groupBy = function (keySelector, elementSelector, resultSelector) {
+        EnumerablePrototype.groupBy = function (keySelector, elementSelector, resultSelector, comparer) {
             elementSelector || (elementSelector = identity);
+            comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var map = new WeakMap(), keys = [], index = 0, value, key,
+                var map = new InternalMap(comparer), keys = [], index = 0, value, key,
                     parentEnumerator = parent.getEnumerator(), 
                     parentCurrent,
                     parentKey,
@@ -563,11 +554,11 @@
                         parentCurrent = parentEnumerator.getCurrent();
                         parentKey = keySelector(parentCurrent);
                         if (!map.has(parentKey)) {
-                            map.set(parentKey, enumerableEmpty());
+                            map.set(parentKey, []);
                             keys.push(parentKey);
                         }
                         parentElement = elementSelector(parentCurrent);
-                        map.get(parentKey).concat(enumerableReturn(parentElement));
+                        map.get(parentKey).push(parentElement);
                     }                    
                 } catch(e) {
                     throw e;
@@ -580,7 +571,7 @@
                         var values;
                         if (index < keys.length) {
                             key = keys[index++];
-                            values = map.get(key);
+                            values = enumerableFromArray(map.get(key));
                             if (!resultSelector) {
                                 values.key = key;
                                 value = values;

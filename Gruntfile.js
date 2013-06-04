@@ -27,6 +27,7 @@ module.exports = function (grunt) {
                     'src/core/license.js',
                     'src/core/intro.js',
                     'src/core/basicheader.js',
+                    'src/core/es6collections.js',
                     'src/core/enumerator.js',
                     'src/core/enumerable.js',
                     'src/core/exports.js',
