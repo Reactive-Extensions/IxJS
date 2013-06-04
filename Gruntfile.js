@@ -19,15 +19,14 @@ module.exports = function (grunt) {
                 '*/'
         },
         concat: {
-            options: {
-                separator: ';'
-            },
             basic: {
                 src: [
                     'src/core/license.js',
                     'src/core/intro.js',
                     'src/core/basicheader.js',
-                    'src/core/es6collections.js',
+                    'src/core/internal/inherits.js',
+                    'src/core/internal/dictionary.js',
+                    'src/core/internal/lookup.js',
                     'src/core/enumerator.js',
                     'src/core/enumerable.js',
                     'src/core/exports.js',
@@ -75,5 +74,4 @@ module.exports = function (grunt) {
 
     // Default task(s).
     grunt.registerTask('default', ['concat:basic', 'concat:ixJS', 'uglify:basic', 'uglify:ixJS', 'qunit']);
-
 };

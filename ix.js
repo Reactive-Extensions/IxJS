@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
-;(function (root, factory) {
+
+(function (root, factory) {
     var freeExports = typeof exports == 'object' && exports &&
     (typeof root == 'object' && root && root == root.global && (window = root), exports);
 
@@ -15,7 +16,8 @@
         root.Ix = factory(root, {}, root.Ix);
     }
 }(this, function (global, exp, root, undefined) {
-    ;    function noop () { }
+    
+    function noop () { }
     function identity (x) { return x; }
     function defaultComparer (x, y) { return x > y ? 1 : x < y ? -1 : 0; }
     function defaultEqualityComparer (x, y) { return x === y; }
@@ -41,7 +43,8 @@
         enumerableFromArray = Enumerable.fromArray,
         enumerableRepeat = Enumerable.repeat,
         enumeratorCreate = root.Enumerator.create
-        inherits = root.internals.inherits;;
+        inherits = root.Internals.inherits;
+
     /** 
      * Determines whether an enumerable sequence is empty.
      * @return {Boolean} true if the sequence is empty; false otherwise.
@@ -99,7 +102,8 @@
     EnumerablePrototype.maxBy = function (keySelector, comparer) {
         comparer || (comparer = defaultComparer);
         return extremaBy(this, keySelector, comparer);  
-    };;
+    };
+
     var SharedBuffer = (function () {
         inherits(SharedBuffer, Enumerable);
 
@@ -458,7 +462,8 @@
             return new Enumerable(function () { return arguments[1](source.memoize(arguments[0])).getEnumerator(); });
         }
     };
-    ;
+    
+
     /**
      * Returns a sequence that throws an exception upon enumeration.
      * 
@@ -551,7 +556,8 @@
             });
         });
     };
-;    function functionBind(f, context) {
+
+    function functionBind(f, context) {
         return function () {
             f.apply(context, arguments);
         };
@@ -912,7 +918,8 @@
         var parent = this;
         return enumerableRepeat(0, count).selectMany(function () { return parent; });
     };     
-;    function catchExceptionHandler (source, handler) {
+
+    function catchExceptionHandler (source, handler) {
         return new Enumerable(function () {
             var current, e, errE;
             return enumeratorCreate(
@@ -1143,7 +1150,8 @@
                 function () { e.dispose(); }
             );
         });
-    };;    /**
+    };
+    /**
      * Generates an enumerable sequence by repeating a source sequence as long as the given loop condition holds.
      * @param condition Loop condition.
      * @param source Sequence to repeat while the condition evaluates true.
@@ -1202,5 +1210,6 @@
     Enumerable.forIn = function (source, resultSelector) {
         return source.select(resultSelector);
     };
-;    return root;
+
+    return root;
 }));

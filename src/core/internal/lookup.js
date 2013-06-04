@@ -7,19 +7,19 @@
         var LookupPrototype = Lookup.prototype;
 
         LookupPrototype.has = function (key) {
-            return map.containsKey(key);
+            return this.map.containsKey(key);
         };
 
         LookupPrototype.length = function () {
-            return map.length();
+            return this.map.length();
         };
 
         LookupPrototype.get = function (key) {
-            return enumerableFromArray(map.get(key));
+            return enumerableFromArray(this.map.get(key));
         };
 
         LookupPrototype.toEnumerable = function () {
-            return map.toEnumerable().select(function (kvp) {
+            return this.map.toEnumerable().select(function (kvp) {
                 var e = enumerableFromArray(kvp.value);
                 e.key = kvp.key;
                 return e;

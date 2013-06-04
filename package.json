@@ -2,7 +2,7 @@
   "name": "ix",
   "title": "Interactive Extensions for JavaScript (IxJS)",
   "description": "Library for composing asynchronous and event-based operations in JavaScript",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "homepage": "http://rx.codeplex.com",
   "author": {
     "name": "MS Open Tech",

@@ -24,4 +24,4 @@
         enumerableFromArray = Enumerable.fromArray,
         enumerableRepeat = Enumerable.repeat,
         enumeratorCreate = root.Enumerator.create
-        inherits = root.internals.inherits;
+        inherits = root.Internals.inherits;

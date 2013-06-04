@@ -1037,6 +1037,149 @@ and limitations under the License.
         hasNext(res, 42);
         hasNext(res, 42);
         noNext(res);
-    });    
+    });   
+
+    function Pet(name, owner) {
+        this.name = name;
+        this.owner = owner;
+    }
+
+    function Person(name) {
+        this.name = name;
+    }
+
+    test('Join_1', function () {
+        var magnus = new Person("Hedlund, Magnus");
+        var terry = new Person("Adams, Terry");
+        var charlotte = new Person("Weiss, Charlotte");
+
+        var barley = new Pet("Barley", terry);
+        var boots = new Pet("Boots", terry);
+        var whiskers = new Pet(Name = "Whiskers", charlotte);
+        var daisy = new Pet("Daisy", magnus);
+
+        var people = Enumerable.fromArray([magnus, terry, charlotte]);
+        var pets = Enumerable.fromArray([barley, boots, whiskers, daisy]);
+
+        var query = people.join(
+            pets,
+            function (person) { return person; },
+            function (pet) { return pet.owner; },
+            function (person, pet) { return { ownerName: person.name, pet: pet.name }; }
+        );
+
+        var res = query.getEnumerator();
+
+        var predicate = function (x, y) { return x.ownerName === y.ownerName && x.pet === y.pet; };
+        hasNext(res, { ownerName: "Hedlund, Magnus", pet: "Daisy"}, predicate);
+        hasNext(res, { ownerName: "Adams, Terry", pet: "Barley"}, predicate);
+        hasNext(res, { ownerName: "Adams, Terry", pet: "Boots"}, predicate);
+        hasNext(res, { ownerName: "Weiss, Charlotte", pet: "Whiskers"}, predicate);
+        noNext(res);
+    });
+
+    test('Join_2', function () {
+        var magnus = new Person("Hedlund, Magnus");
+        var terry = new Person("Adams, Terry");
+        var charlotte = new Person("Weiss, Charlotte");
+
+        var barley = new Pet("Barley", terry);
+        var boots = new Pet("Boots", terry);
+        var whiskers = new Pet(Name = "Whiskers", charlotte);
+        var daisy = new Pet("Daisy", magnus);
+
+        var people = Enumerable.fromArray([magnus, terry, charlotte]);
+        var pets = Enumerable.fromArray([barley, boots, whiskers, daisy]);
+
+        var predicate = function (x, y) { return x.ownerName === y.ownerName && x.pet === y.pet; };
+
+        var query = people.join(
+            pets,
+            function (person) { return person; },
+            function (pet) { return pet.owner; },
+            function (person, pet) { return { ownerName: person.name, pet: pet.name }; },
+            predicate
+        );
+
+        var res = query.getEnumerator();
+
+        
+        hasNext(res, { ownerName: "Hedlund, Magnus", pet: "Daisy"}, predicate);
+        hasNext(res, { ownerName: "Adams, Terry", pet: "Barley"}, predicate);
+        hasNext(res, { ownerName: "Adams, Terry", pet: "Boots"}, predicate);
+        hasNext(res, { ownerName: "Weiss, Charlotte", pet: "Whiskers"}, predicate);
+        noNext(res);
+    });
+
+    test('GroupJoin_1', function () {
+        var magnus = new Person("Hedlund, Magnus");
+        var terry = new Person("Adams, Terry");
+        var charlotte = new Person("Weiss, Charlotte");
+
+        var barley = new Pet("Barley", terry);
+        var boots = new Pet("Boots", terry);
+        var whiskers = new Pet(Name = "Whiskers", charlotte);
+        var daisy = new Pet("Daisy", magnus);
+
+        var people = Enumerable.fromArray([magnus, terry, charlotte]);
+        var pets = Enumerable.fromArray([barley, boots, whiskers, daisy]);
+
+        var query = people.groupJoin(
+            pets,
+            function (person) { return person; },
+            function (pet) { return pet.owner; },
+            function (person, petCollection) { 
+                return { 
+                    ownerName: person.name, 
+                    pets: petCollection.select(function (pet) { return pet.name; })
+                }; 
+            }
+        );
+
+        var res = query.getEnumerator();
+
+        var predicate = function (x, y) { return x.ownerName === y.ownerName && x.pets.sequenceEqual(y.pets); };
+        hasNext(res, { ownerName: "Hedlund, Magnus", pets: Enumerable.fromArray(["Daisy"]) }, predicate);
+        hasNext(res, { ownerName: "Adams, Terry", pets: Enumerable.fromArray(["Barley", "Boots"]) }, predicate);
+        hasNext(res, { ownerName: "Weiss, Charlotte", pets: Enumerable.fromArray(["Whiskers"]) }, predicate);
+        noNext(res);
+    });
+
+    test('GroupJoin_2', function () {
+        var magnus = new Person("Hedlund, Magnus");
+        var terry = new Person("Adams, Terry");
+        var charlotte = new Person("Weiss, Charlotte");
+
+        var barley = new Pet("Barley", terry);
+        var boots = new Pet("Boots", terry);
+        var whiskers = new Pet(Name = "Whiskers", charlotte);
+        var daisy = new Pet("Daisy", magnus);
+
+        var people = Enumerable.fromArray([magnus, terry, charlotte]);
+        var pets = Enumerable.fromArray([barley, boots, whiskers, daisy]);
+
+        var predicate = function (x, y) { return x.ownerName === y.ownerName && x.pet === y.pet; };
+
+        var query = people.groupJoin(
+            pets,
+            function (person) { return person; },
+            function (pet) { return pet.owner; },
+            function (person, petCollection) { 
+                return { 
+                    ownerName: person.name, 
+                    pets: petCollection.select(function (pet) { return pet.name; })
+                }; 
+            },
+            predicate
+        );
+
+        var res = query.getEnumerator();
+        
+        var predicate = function (x, y) { return x.ownerName === y.ownerName && x.pets.sequenceEqual(y.pets); };
+        hasNext(res, { ownerName: "Hedlund, Magnus", pets: Enumerable.fromArray(["Daisy"]) }, predicate);
+        hasNext(res, { ownerName: "Adams, Terry", pets: Enumerable.fromArray(["Barley", "Boots"]) }, predicate);
+        hasNext(res, { ownerName: "Weiss, Charlotte", pets: Enumerable.fromArray(["Whiskers"]) }, predicate);
+        noNext(res);
+    });
 
 }(this));

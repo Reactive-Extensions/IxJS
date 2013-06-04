@@ -1,4 +1,4 @@
-    var Enumerator = root.Enumerator = function (moveNext, getCurrent, dispose) {
+    var Enumerator = Ix.Enumerator = function (moveNext, getCurrent, dispose) {
         this.moveNext = moveNext;
         this.getCurrent = getCurrent;
         this.dispose = dispose;

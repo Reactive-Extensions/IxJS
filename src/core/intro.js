@@ -7,5 +7,5 @@
         window = freeGlobal;
     } 
 
-    var root = { Internals: {} };
+    var Ix = { Internals: {} };
     

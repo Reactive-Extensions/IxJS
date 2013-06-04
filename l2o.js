@@ -1,10 +1,17 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
-;(function (window, undefined) {
-    var freeExports = typeof exports == 'object' && exports &&
-        (typeof global == 'object' && global && global == global.global && (window = global), exports);    
 
-    var root = { internals: {} };
-    ;    // Headers
+(function (window, undefined) {
+	
+    var freeExports = typeof exports == 'object' && exports,
+        freeModule = typeof module == 'object' && module && module.exports == freeExports && module,
+        freeGlobal = typeof global == 'object' && global;
+    if (freeGlobal.global === freeGlobal) {
+        window = freeGlobal;
+    } 
+
+    var Ix = { Internals: {} };
+    
+    // Headers
     function noop () { }
     function identity (x) { return x; }
     function defaultComparer (x, y) { return x > y ? 1 : x < y ? -1 : 0; }
@@ -14,64 +21,375 @@
     var seqNoElements = 'Sequence contains no elements.';
     var invalidOperation = 'Invalid operation';
     var slice = Array.prototype.slice;
-
+    
     var hasProp = {}.hasOwnProperty;
-    var inherits = root.internals.inherits = function (child, parent) {
-        for (var key in parent) {
-            if (key !== 'prototype' && hasProp.call(parent, key)) child[key] = parent[key];
-        }
-        function ctor() { this.constructor = child; }
-        ctor.prototype = parent.prototype;
-        child.prototype = new ctor();
-        child.super_ = parent.prototype;
-        return child;
+
+    /** @private */
+    var inherits = this.inherits = Ix.Internals.inherits = function (child, parent) {
+        function __() { this.constructor = child; }
+        __.prototype = parent.prototype;
+        child.prototype = new __();
     };
-    ;    function arrayIndexOf (arr, value, comparer) {
-        comparer || (comparer = defaultEqualityComparer);
-        for (var i  = 0, len = arr.length; i < len; i++) {
-            if (comparer(arr[i], value)) { return i; }
+
+    /** @private */    
+    var addProperties = Ix.Internals.addProperties = function (obj) {
+        var sources = slice.call(arguments, 1);
+        for (var i = 0, len = sources.length; i < len; i++) {
+            var source = sources[i];
+            for (var prop in source) {
+                obj[prop] = source[prop];
+            }
         }
-        return -1;
+    };
+    // Real Dictionary
+    var primes = [1, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381, 32749, 65521, 131071, 262139, 524287, 1048573, 2097143, 4194301, 8388593, 16777213, 33554393, 67108859, 134217689, 268435399, 536870909, 1073741789, 2147483647];
+    var noSuchkey = "no such key";
+    var duplicatekey = "duplicate key";
+
+    function isPrime(candidate) {
+        if (candidate & 1 === 0) {
+            return candidate === 2;
+        }
+        var num1 = Math.sqrt(candidate),
+            num2 = 3;
+        while (num2 <= num1) {
+            if (candidate % num2 === 0) {
+                return false;
+            }
+            num2 += 2;
+        }
+        return true;
     }
 
-    var InternalMap = (function () {
-        function InternalMap (comparer) {
-            this.comparer = comparer || defaultEqualityComparer;
-            this.keys = [];
-            this.values = [];
+    function getPrime(min) {
+        var index, num, candidate;
+        for (index = 0; index < primes.length; ++index) {
+            num = primes[index];
+            if (num >= min) {
+                return num;
+            }
+        }
+        candidate = min | 1;
+        while (candidate < primes[primes.length - 1]) {
+            if (isPrime(candidate)) {
+                return candidate;
+            }
+            candidate += 2;
+        }
+        return min;
+    }
+
+    function stringHashFn(str) {
+        var hash = 0;
+        if (!str.length) {
+            return hash;
+        }
+        for (var i = 0, len = str.length; i < len; i++) {
+            var character = str.charCodeAt(i);
+            hash = ((hash<<5)-hash)+character;
+            hash = hash & hash;
+        }
+        return hash;
+    }
+
+    function numberHashFn(key) {
+        var c2 = 0x27d4eb2d; 
+        key = (key ^ 61) ^ (key >>> 16);
+        key = key + (key << 3);
+        key = key ^ (key >>> 4);
+        key = key * c2;
+        key = key ^ (key >>> 15);
+        return key;
+    }
+
+    var getHashCode = (function () {
+        var uniqueIdCounter = 0;
+
+        return function (obj) {
+            if (obj == null) { 
+                throw new Error(noSuchkey);
+            }
+
+            // Check for built-ins before tacking on our own for any object
+            if (typeof obj === 'string') {
+                return stringHashFn(obj);
+            }
+
+            if (typeof obj === 'number') {
+                return numberHashFn(obj);
+            }
+
+            if (typeof obj === 'boolean') {
+                return obj === true ? 1 : 0;
+            }
+
+            if (obj instanceof Date) {
+                return obj.getTime();
+            }
+
+            if (obj.getHashCode) {
+                return obj.getHashCode();
+            }
+
+            var id = 17 * uniqueIdCounter++;
+            obj.getHashCode = function () { return id; };
+            return id;
+        };
+    } ());
+
+    function newEntry() {
+        return { key: null, value: null, next: 0, hashCode: 0 };
+    }
+
+    // Dictionary implementation
+
+    var Dictionary = function (capacity, comparer) {
+        if (capacity < 0) {
+            throw new Error('out of range')
+        }
+        if (capacity > 0) {
+            this._initialize(capacity);
+        }
+        
+        this.comparer = comparer || defaultComparer;
+        this.freeCount = 0;
+        this.size = 0;
+        this.freeList = -1;
+    };
+
+    DictionaryPrototype = Dictionary.prototype;
+
+    DictionaryPrototype._initialize = function (capacity) {
+        var prime = getPrime(capacity), i;
+        this.buckets = new Array(prime);
+        this.entries = new Array(prime);
+        for (i = 0; i < prime; i++) {
+            this.buckets[i] = -1;
+            this.entries[i] = newEntry();
+        }
+        this.freeList = -1;
+    };
+
+    DictionaryPrototype.add = function (key, value) {
+        return this._insert(key, value, true);
+    };
+
+    DictionaryPrototype._insert = function (key, value, add) {
+        if (!this.buckets) {
+            this._initialize(0);
+        }
+        var index3;
+        var num = getHashCode(key) & 2147483647;
+        var index1 = num % this.buckets.length;
+        for (var index2 = this.buckets[index1]; index2 >= 0; index2 = this.entries[index2].next) {
+            if (this.entries[index2].hashCode === num && this.comparer(this.entries[index2].key, key)) {
+                if (add) {
+                    throw new Error(duplicatekey);
+                }
+                this.entries[index2].value = value;
+                return;
+            }
+        }
+        if (this.freeCount > 0) {
+            index3 = this.freeList;
+            this.freeList = this.entries[index3].next;
+            --this.freeCount;
+        } else {
+            if (this.size === this.entries.length) {
+                this._resize();
+                index1 = num % this.buckets.length;
+            }
+            index3 = this.size;
+            ++this.size;
+        }
+        this.entries[index3].hashCode = num;
+        this.entries[index3].next = this.buckets[index1];
+        this.entries[index3].key = key;
+        this.entries[index3].value = value;
+        this.buckets[index1] = index3;
+    };
+
+    DictionaryPrototype._resize = function () {
+        var prime = getPrime(this.size * 2),
+            numArray = new Array(prime);
+        for (index = 0; index < numArray.length; ++index) {
+            numArray[index] = -1;
+        }
+        var entryArray = new Array(prime);
+        for (index = 0; index < this.size; ++index) {
+            entryArray[index] = this.entries[index];
+        }
+        for (var index = this.size; index < prime; ++index) {
+            entryArray[index] = newEntry();
+        }
+        for (var index1 = 0; index1 < this.size; ++index1) {
+            var index2 = entryArray[index1].hashCode % prime;
+            entryArray[index1].next = numArray[index2];
+            numArray[index2] = index1;
+        }
+        this.buckets = numArray;
+        this.entries = entryArray;
+    };
+
+    DictionaryPrototype.remove = function (key) {
+        if (this.buckets) {
+            var num = getHashCode(key) & 2147483647;
+            var index1 = num % this.buckets.length;
+            var index2 = -1;
+            for (var index3 = this.buckets[index1]; index3 >= 0; index3 = this.entries[index3].next) {
+                if (this.entries[index3].hashCode === num && this.comparer(this.entries[index3].key, key)) {
+                    if (index2 < 0) {
+                        this.buckets[index1] = this.entries[index3].next;
+                    } else {
+                        this.entries[index2].next = this.entries[index3].next;
+                    }
+                    this.entries[index3].hashCode = -1;
+                    this.entries[index3].next = this.freeList;
+                    this.entries[index3].key = null;
+                    this.entries[index3].value = null;
+                    this.freeList = index3;
+                    ++this.freeCount;
+                    return true;
+                } else {
+                    index2 = index3;
+                }
+            }
+        }
+        return false;
+    };
+
+    DictionaryPrototype.clear = function () {
+        var index, len;
+        if (this.size <= 0) {
+            return;
+        }
+        for (index = 0, len = this.buckets.length; index < len; ++index) {
+            this.buckets[index] = -1;
+        }
+        for (index = 0; index < this.size; ++index) {
+            this.entries[index] = newEntry();
+        }
+        this.freeList = -1;
+        this.size = 0;
+    };
+
+    DictionaryPrototype._findEntry = function (key) {
+        if (this.buckets) {
+            var num = getHashCode(key) & 2147483647;
+            for (var index = this.buckets[num % this.buckets.length]; index >= 0; index = this.entries[index].next) {
+                if (this.entries[index].hashCode === num && this.comparer(this.entries[index].key, key)) {
+                    return index;
+                }
+            }
+        }
+        return -1;
+    };
+
+    DictionaryPrototype.length = function () {
+        return this.size - this.freeCount;
+    };
+
+    DictionaryPrototype.tryGetValue = function (key) {
+        var entry = this._findEntry(key);
+        if (entry >= 0) {
+            return this.entries[entry].value;
+        }
+        return undefined;
+    };
+
+    DictionaryPrototype.getValues = function () {
+        var index = 0, results = [];
+        if (this.entries) {
+            for (var index1 = 0; index1 < this.size; index1++) {
+                if (this.entries[index1].hashCode >= 0) {
+                    results[index++] = this.entries[index1].value;
+                }
+            }
+        }
+        return results;
+    };
+
+    DictionaryPrototype.get = function (key) {
+        var entry = this._findEntry(key);
+        if (entry >= 0) {
+            return this.entries[entry].value;
+        }
+        throw new Error(noSuchkey);
+    };
+
+    DictionaryPrototype.set = function (key, value) {
+        this._insert(key, value, false);
+    };
+
+    DictionaryPrototype.has = function (key) {
+        return this._findEntry(key) >= 0;
+    };
+
+    DictionaryPrototype.toEnumerable = function () {
+        var self = this;
+        return new Enumerable(function () {
+            var index = 0, current;
+
+            return enumeratorCreate(
+                function () {
+                    if (!self.entries) {
+                        return false;
+                    }
+
+                    while (true) {
+                        if (index < self.size) {
+                            if (self.entries[index].hashCode >= 0) {
+                                var k = self.entries[index];
+                                current = { key: k.key, value: k.value };
+                                index++;
+                                return true;
+                            }
+                        } else {
+                            return false;
+                        }
+                    }
+                },
+                function () {
+                    return current;
+                }, 
+                noop
+            );
+        });
+
+    };
+
+    var Lookup = (function () {
+
+        function Lookup(map) {
+            this.map = map;
         }
 
-        var InternalMapPrototype = InternalMap.prototype;
-        InternalMapPrototype.get = function (key) {
-            var idx = arrayIndexOf(this.keys, key, this.comparer);
-            return idx !== -1 ? this.values[idx] : undefined;
+        var LookupPrototype = Lookup.prototype;
+
+        LookupPrototype.has = function (key) {
+            return this.map.containsKey(key);
         };
 
-        InternalMapPrototype.set = function (key, value) {
-            var idx = arrayIndexOf(this.keys, key, this.comparer);
-            if (idx === -1) {
-                this.keys.push(key);
-                this.values.push(value);
-            } else {
-                this.values[idx] = value;
-            }
+        LookupPrototype.length = function () {
+            return this.map.length();
         };
 
-        InternalMapPrototype.has = function (key) {
-            return arrayIndexOf(this.keys, key, this.comparer) !== -1; 
+        LookupPrototype.get = function (key) {
+            return enumerableFromArray(this.map.get(key));
         };
 
-        InternalMapPrototype['delete'] = function (key) {
-            var i = arrayIndexOf(this.keys, key, this.comparer);
-            if (i !== -1) {
-                this.keys.splice(i, 1);
-                this.values.splice(i, 1);
-            } 
+        LookupPrototype.toEnumerable = function () {
+            return this.map.toEnumerable().select(function (kvp) {
+                var e = enumerableFromArray(kvp.value);
+                e.key = kvp.key;
+                return e;
+            });
         };
 
-        return InternalMap; 
+        return Lookup;
     }());
-;    var Enumerator = root.Enumerator = function (moveNext, getCurrent, dispose) {
+
+    var Enumerator = Ix.Enumerator = function (moveNext, getCurrent, dispose) {
         this.moveNext = moveNext;
         this.getCurrent = getCurrent;
         this.dispose = dispose;
@@ -96,10 +414,16 @@
                 done = true;
             }
         });
-    };;    /**
+    };
+    /** @private Check for disposal */
+    function checkAndDispose(e) {
+        e && e.dispose();
+    }
+
+    /**
      * Provides a set of methods to create and query Enumerable sequences.
      */
-    var Enumerable = root.Enumerable = (function () {
+    var Enumerable = Ix.Enumerable = (function () {
         function Enumerable(getEnumerator) {
             this.getEnumerator = getEnumerator;
         }
@@ -185,17 +509,17 @@
          * @return {Boolean} true if every element of the source sequence passes the test in the specified predicate, or if the sequence is empty; otherwise, false.
          */
         EnumerablePrototype.all = EnumerablePrototype.every = function (predicate, thisArg) {
-            var enumerator = this.getEnumerator(), i = 0;
+            var e = this.getEnumerator(), i = 0;
             try {
-                while (enumerator.moveNext()) {
-                    if (!predicate.call(thisArg, enumerator.getCurrent(), i++, this)) {
+                while (e.moveNext()) {
+                    if (!predicate.call(thisArg, e.getCurrent(), i++, this)) {
                         return false;
                     }
                 }
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             return true;
         }; 
@@ -213,17 +537,17 @@
          * @return {Boolean} true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.
          */
         EnumerablePrototype.any = function(predicate, thisArg) {
-            var enumerator = this.getEnumerator(), i = 0;
+            var e = this.getEnumerator(), i = 0;
             try {
-                while (enumerator.moveNext()) {
-                    if (!predicate || predicate.call(thisArg, enumerator.getCurrent(), i++, this)) {
+                while (e.moveNext()) {
+                    if (!predicate || predicate.call(thisArg, e.getCurrent(), i++, this)) {
                         return true;
                     }
                 }
-            } catch(e) {
-                throw e;
+            } catch(ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             return false;   
         }; 
@@ -240,16 +564,16 @@
             if (selector) {
                 return this.select(selector).average();
             }
-            var enumerator = this.getEnumerator(), count = 0, sum = 0;
+            var e = this.getEnumerator(), count = 0, sum = 0;
             try {
-                while (enumerator.moveNext()) {
+                while (e.moveNext()) {
                     count++;
-                    sum += enumerator.getCurrent();
+                    sum += e.getCurrent();
                 }
-            } catch (e) {
-                throw e;                
+            } catch (ex) {
+                throw ex;                
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             if (count === 0) {
                 throw new Error(seqNoElements);
@@ -277,17 +601,17 @@
          */
         EnumerablePrototype.contains = function(value, comparer) {
             comparer || (comparer = defaultEqualityComparer); 
-            var enumerator = this.getEnumerator();
+            var e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    if (comparer(value, enumerator.getCurrent())) {
+                while (e.moveNext()) {
+                    if (comparer(value, e.getCurrent())) {
                         return true;
                     }
                 }
-            } catch (e) {
-                throw e;                
+            } catch (ex) {
+                throw ex;                
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             return false;
         };
@@ -303,17 +627,17 @@
          * @returns {Number} A number that represents how many elements in the sequence satisfy the condition in the predicate function if specified, else number of items in the sequence.
          */
         EnumerablePrototype.count = function(predicate, thisArg) {
-            var c = 0, i = 0, enumerator = this.getEnumerator();
+            var c = 0, i = 0, e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    if (!predicate || predicate.call(thisArg, enumerator.getCurrent(), i++, this)) {
+                while (e.moveNext()) {
+                    if (!predicate || predicate.call(thisArg, e.getCurrent(), i++, this)) {
                         c++;
                     }
                 }
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             return c;       
         };
@@ -349,7 +673,7 @@
                         return true;
                     },
                     function () { return current; },
-                    function () { e && e.dispose(); }
+                    function () { checkAndDispose(e); }
                 );
             });
         };
@@ -385,15 +709,15 @@
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var current, map = [], enumerator;
+                var current, map = [], e;
                 return enumeratorCreate(
                     function () {
-                        enumerator || (enumerator = parent.getEnumerator());
+                        e || (e = parent.getEnumerator());
                         while (true) {
-                            if (!enumerator.moveNext()) {
+                            if (!e.moveNext()) {
                                 return false;
                             }
-                            var c = enumerator.getCurrent();
+                            var c = e.getCurrent();
                             if (arrayIndexOf.call(map, c, comparer) === -1) {
                                 current = c;
                                 map.push(current);
@@ -402,7 +726,7 @@
                         }
                     },
                     function () { return current; },
-                    function () { enumerator && enumerator.dispose(); }
+                    function () { checkAndDispose(e);}
                 );
             });
         };
@@ -438,25 +762,25 @@
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var current, map = [], secondEnumerator = second.getEnumerator(), firstEnumerator;
+                var current, map = [], se = second.getEnumerator(), fe;
                 try {
-                    while (secondEnumerator.moveNext()) {
-                        map.push(secondEnumerator.getCurrent());
+                    while (se.moveNext()) {
+                        map.push(se.getCurrent());
                     }
-                } catch(e) {
-                    throw e;
+                } catch(ex) {
+                    throw ex;
                 } finally {
-                    secondEnumerator.dispose();
+                    checkAndDispose(se);
                 }
 
                 return enumeratorCreate(
                     function () {
-                        firstEnumerator || (firstEnumerator = parent.getEnumerator());
+                        fe || (fe = parent.getEnumerator());
                         while (true) {
-                            if (!firstEnumerator.moveNext()) {
+                            if (!fe.moveNext()) {
                                 return false;
                             }
-                            current = firstEnumerator.getCurrent();
+                            current = fe.getCurrent();
                             if (arrayIndexOf.call(map, current, comparer) === -1) {
                                 map.push(current);
                                 return true;
@@ -464,7 +788,7 @@
                         }
                     },
                     function () { return current; },
-                    function () { firstEnumerator && firstEnumerator.dispose(); }
+                    function () { checkAndDispose(fe); }
                 );
             });
         };        
@@ -476,17 +800,17 @@
          * @returns {Any} The first element in the sequence that passes the test in the specified predicate function if specified, else the first element.
          */
         EnumerablePrototype.first = function (predicate) {
-            var enumerator = this.getEnumerator();
+            var e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    var current = enumerator.getCurrent();
+                while (e.moveNext()) {
+                    var current = e.getCurrent();
                     if (!predicate || predicate(current))
                         return current;
                 }
-            } catch(e) {
-                throw e;
+            } catch(ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }       
             throw new Error(seqNoElements);
         };
@@ -498,18 +822,18 @@
          * @returns {Any} null if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.
          */
         EnumerablePrototype.firstOrDefault = function (predicate) {
-            var enumerator = this.getEnumerator();
+            var e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    var current = enumerator.getCurrent();
+                while (e.moveNext()) {
+                    var current = e.getCurrent();
                     if (!predicate || predicate(current)) {
                         return current;
                     }
                 }
-            } catch(e) {
-                throw e;
+            } catch(ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }       
             return null;
         };
@@ -532,38 +856,54 @@
                 while (e.moveNext()) {
                     action.call(thisArg, e.getCurrent(), i++, this);
                 }
-            } catch(e) {
-                throw e;
+            } catch(ex) {
+                throw ex;
             } finally {
-                e.dispose();
+                checkAndDispose(e);
             }
         };       
 
+        /**
+         * Groups the elements of a sequence according to a specified key selector function and creates a result value from each group and its key. 
+         * Key values are compared by using a specified comparer, and the elements of each group are projected by using a specified function.
+         *
+         * @example
+         * res = sequence.groupBy(keySelector);
+         * res = sequence.groupBy(keySelector, elementSelector);
+         * res = sequence.groupBy(keySelector, elementSelector, resultSelector);
+         * res = sequence.groupBy(keySelector, elementSelector, resultSelector, comparer);              
+         *
+         * @param {Function} keySelector A function to extract the key for each element.
+         * @param {Function} [elementSelector] A function to map each source element to an element in grouping.
+         * @param {Function} [resultSelector] A function to create a result value from each group.
+         * @param {Function} [comparer] An optional function to compare keys with.
+         * @returns {Enumerable} A collection of elements where each element represents a projection over a group and its key.
+         */
         EnumerablePrototype.groupBy = function (keySelector, elementSelector, resultSelector, comparer) {
             elementSelector || (elementSelector = identity);
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var map = new InternalMap(comparer), keys = [], index = 0, value, key,
-                    parentEnumerator = parent.getEnumerator(), 
+                var map = new Dictionary(0, comparer), keys = [], index = 0, value, key,
+                    pe = parent.getEnumerator(), 
                     parentCurrent,
                     parentKey,
                     parentElement;
                 try {
-                    while (parentEnumerator.moveNext()) {
-                        parentCurrent = parentEnumerator.getCurrent();
+                    while (pe.moveNext()) {
+                        parentCurrent = pe.getCurrent();
                         parentKey = keySelector(parentCurrent);
                         if (!map.has(parentKey)) {
-                            map.set(parentKey, []);
+                            map.add(parentKey, []);
                             keys.push(parentKey);
                         }
                         parentElement = elementSelector(parentCurrent);
                         map.get(parentKey).push(parentElement);
                     }                    
-                } catch(e) {
-                    throw e;
+                } catch(ex) {
+                    throw ex;
                 } finally {
-                    parentEnumerator.dispose();
+                    checkAndDispose(pe);
                 }
 
                 return enumeratorCreate(
@@ -588,6 +928,93 @@
         };
 
         /**
+         * Correlates the elements of two sequences based on equality of keys and groups the results. 
+         *
+         * @param {Enumerable} inner The sequence to join to the first sequence.
+         * @param {Function} outerKeySelector A function to extract the join key from each element of the first sequence.
+         * @param {Function} innerKeySelector A function to extract the join key from each element of the second sequence.
+         * @param {Function} resultSelector A function to create a result element from an element from the first sequence and a collection of matching elements from the second sequence.
+         * @param {Function} [comparer] An optional function to compare keys.
+         * @returns {Enumerable} An Enumerable that contains elements that are obtained by performing a grouped join on two sequences.
+         */
+        EnumerablePrototype.groupJoin = function (inner, outerKeySelector, innerKeySelector, resultSelector, comparer) {
+            var outer = this;
+            comparer || (comparer = defaultEqualityComparer);
+            return new Enumerable(function () {
+                var e, lookup, current;
+
+                return enumeratorCreate(
+                    function () {
+                        e || (e = outer.getEnumerator());
+                        if (!lookup) {
+                            lookup = inner.toLookup(innerKeySelector, identity, comparer);
+                        }
+
+                        if (!e.moveNext()) {
+                            return false;
+                        }
+
+                        var c = e.getCurrent();
+                        var innerElement = lookup.get(outerKeySelector(c));
+                        current = resultSelector(c, innerElement);
+                        return true;
+                    },
+                    function () { return current; }, 
+                    function () { checkAndDispose(e); }
+                );
+            });
+        };
+
+        /** 
+         * Correlates the elements of two sequences based on matching keys. 
+         *
+         * @param {Enumerable} inner The sequence to join to the first sequence.
+         * @param {Function} outerKeySelector A function to extract the join key from each element of the first sequence.
+         * @param {Function} innerKeySelector A function to extract the join key from each element of the second sequence.
+         * @param {Function} resultSelector A function to create a result element from two matching elements.
+         * @returns {Enumerable} An Enumerable that has elements that are obtained by performing an inner join on two sequences.
+         */
+        EnumerablePrototype.join = function(inner, outerKeySelector, innerKeySelector, resultSelector, comparer) {
+            var outer = this;
+            comparer || (comparer = defaultEqualityComparer);
+
+            return new Enumerable(function () {
+                var e, current, lookup, innerElements, innerLength = 0;
+
+                return enumeratorCreate(
+                    function () {
+                        e || (e = outer.getEnumerator());
+                        if (!lookup) {
+                            lookup = inner.toLookup(innerKeySelector, identity, comparer);
+                        }
+
+                        while (true) {
+                            if (innerElements != null) {
+                                var innerElement = innerElements[innerLength++];
+                                if (innerElement) {
+                                    current = resultSelector(e.getCurrent(), innerElement);
+                                    return true;
+                                }
+
+                                innerElement = null;
+                                innerLength = 0;
+                            }
+
+                            if (!e.moveNext()) {
+                                return false;
+                            }
+
+                            var key = outerKeySelector(e.getCurrent());
+                            innerElements = lookup.get(key).toArray();
+                        }
+                    },
+                    function () { return current; },
+                    function () { checkAndDispose(e); }
+                );
+            });          
+        };
+
+        /**
          * Produces the set intersection of two sequences by using an optional comparer fuction to compare values.
          * @param {Enumerable} second An Enumerable whose distinct elements that also appear in the first sequence will be returned.
          * @param {Function} [comparer] A comparer function to compare values.
@@ -597,24 +1024,24 @@
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return new Enumerable(function () {
-                var current,  map = [], secondEnumerator = second.getEnumerator(), firstEnumerator;
+                var current,  map = [], se = second.getEnumerator(), fe;
                 try {
-                    while (secondEnumerator.moveNext()) {
-                        map.push(secondEnumerator.getCurrent());
+                    while (se.moveNext()) {
+                        map.push(se.getCurrent());
                     }                    
-                } catch (e) {
-                    throw e;
+                } catch (ex) {
+                    throw ex;
                 } finally {
-                    secondEnumerator.dispose();
+                    checkAndDispose(se);
                 }
                 return enumeratorCreate(
                     function () {
-                        firstEnumerator || (firstEnumerator = parent.getEnumerator());
+                        fe || (fe = parent.getEnumerator());
                         while (true) {
-                            if (!firstEnumerator.moveNext()) {
+                            if (!fe.moveNext()) {
                                 return false;
                             }
-                            var c = firstEnumerator.getCurrent();
+                            var c = fe.getCurrent();
                             if (arrayRemove.call(map, c, comparer)) {
                                 current = c;
                                 return true;
@@ -625,7 +1052,7 @@
                         return current;
                     },
                     function () {
-                        firstEnumerator && firstEnumerator.dispose();
+                        checkAndDispose(fe);
                     }
                 );
             });
@@ -642,19 +1069,19 @@
          * @returns {Any} The last element in the sequence that passes the test in the specified predicate function if specified, else the last element.
          */
         EnumerablePrototype.last = function (predicate) {
-            var hasValue = false, value, enumerator = this.getEnumerator();
+            var hasValue = false, value, e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    var current = enumerator.getCurrent();
+                while (e.moveNext()) {
+                    var current = e.getCurrent();
                     if (!predicate || predicate(current)) {
                         hasValue = true;
                         value = current;
                     }
                 }
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }       
             if (hasValue) {
                 return value;
@@ -673,19 +1100,19 @@
          * @returns {Any} null if the sequence is empty or if no elements pass the test in the predicate function; otherwise, the last element that passes the test in the predicate function if specified, else the last element.
          */
         EnumerablePrototype.lastOrDefault = function (predicate) {
-            var hasValue = false, value, enumerator = this.getEnumerator();
+            var hasValue = false, value, e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    var current = enumerator.getCurrent();
+                while (e.moveNext()) {
+                    var current = e.getCurrent();
                     if (!predicate || predicate(current)) {
                         hasValue = true;
                         value = current;
                     }
                 }
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                e.dispose();
             }
 
             return hasValue ? value : null;
@@ -693,6 +1120,7 @@
 
         /**
          * Invokes a transform function on each element of a generic sequence and returns the maximum resulting value.
+         *
          * @param {Function} [selector] A transform function to apply to each element.
          * @returns {Any} The maximum value in the sequence.
          */ 
@@ -700,10 +1128,10 @@
             if(selector) {
                 return this.select(selector).max();
             }       
-            var m, hasElement = false, enumerator = this.getEnumerator();
+            var m, hasElement = false, e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    var x = enumerator.getCurrent();
+                while (e.moveNext()) {
+                    var x = e.getCurrent();
                     if (!hasElement) {
                         m = x;
                         hasElement = true;
@@ -713,10 +1141,10 @@
                         }
                     }
                 }
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                e.dispose();
             }
             if(!hasElement) {
                 throw new Error(seqNoElements);
@@ -734,10 +1162,10 @@
             if(selector) {
                 return this.select(selector).min();
             }       
-            var m, hasElement = false, enumerator = this.getEnumerator();
+            var m, hasElement = false, e = this.getEnumerator();
             try {
-                while(enumerator.moveNext()) {
-                    var x = enumerator.getCurrent();
+                while(e.moveNext()) {
+                    var x = e.getCurrent();
                     if (!hasElement) {
                         m = x;
                         hasElement = true;
@@ -747,10 +1175,10 @@
                         }
                     }
                 }
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             if(!hasElement) {
                 throw new Error(seqNoElements);
@@ -786,15 +1214,15 @@
          * @returns {Enumerable} A sequence whose elements correspond to those of the input sequence in reverse order.
          */
         EnumerablePrototype.reverse = function () {
-            var arr = [], enumerator = this.getEnumerator();
+            var arr = [], e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    arr.unshift(enumerator.getCurrent());
+                while (e.moveNext()) {
+                    arr.unshift(e.getCurrent());
                 }
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             return enumerableFromArray(arr);
         };        
@@ -809,18 +1237,18 @@
         EnumerablePrototype.select = function (selector, thisArg) {
             var parent = this;
             return new Enumerable(function () {
-                var current, index = 0, enumerator;
+                var current, index = 0, e;
                 return enumeratorCreate(
                     function () {
-                        enumerator || (enumerator = parent.getEnumerator());
-                        if (!enumerator.moveNext()) {
+                        e || (e = parent.getEnumerator());
+                        if (!e.moveNext()) {
                             return false;
                         }
-                        current = selector.call(thisArg, enumerator.getCurrent(), index++, parent);
+                        current = selector.call(thisArg, e.getCurrent(), index++, parent);
                         return true;
                     },
                     function () { return current; },
-                    function () { enumerator && enumerator.dispose(); }
+                    function () { checkAndDispose(e); }
                 );
             });
         };
@@ -848,46 +1276,61 @@
         EnumerablePrototype.selectMany = function (collectionSelector, resultSelector) {
             var parent = this;
             return new Enumerable(function () {
-                var current, index = 0, outerEnumerator, innerEnumerator;
+                var current, index = 0, oe, ie;
                 return enumeratorCreate(
                     function () {
-                        outerEnumerator || (outerEnumerator = parent.getEnumerator());
+                        oe || (oe = parent.getEnumerator());
                         while (true) {
-                            if (!innerEnumerator) {
-                                if (!outerEnumerator.moveNext()) {
+                            if (!ie) {
+                                if (!oe.moveNext()) {
                                     return false;
                                 }
 
-                                innerEnumerator = collectionSelector(outerEnumerator.getCurrent(), index++).getEnumerator();
+                                ie = collectionSelector(oe.getCurrent(), index++).getEnumerator();
                             }
-                            if (innerEnumerator.moveNext()) {
-                                current = innerEnumerator.getCurrent();
+                            if (ie.moveNext()) {
+                                current = ie.getCurrent();
                                 
                                 if (resultSelector) {
-                                    var o = outerEnumerator.getCurrent();
+                                    var o = oe.getCurrent();
                                     current = resultSelector(o, current);
                                 }
 
                                 return true;
                             } else {
-                                innerEnumerator.dispose();
-                                innerEnumerator = null;
+                                checkAndDispose(ie);
+                                ie = null;
                             }
                         }
                     },
                     function () { return current; },
                     function () {
-                        innerEnumerator && innerEnumerator.dispose();
-                        outerEnumerator && outerEnumerator.dispose();   
+                        checkAndDispose(ie);
+                        checkAndDispose(oe);  
                     }
                 );
             });
         };
 
+        /** 
+         * Determines whether two sequences are equal with an optional equality comparer
+         * 
+         * @param {Enumerable} first An Enumerable to compare to second.
+         * @param {Enumerable} second An Enumerable to compare to the first sequence.
+         * @param {Function} [comparer] An optional function to use to compare elements.
+         * @returns {Boolean} true if the two source sequences are of equal length and their corresponding elements compare equal according to comparer; otherwise, false.
+         */
         Enumerable.sequenceEqual = function (first, second, comparer) {
             return first.sequenceEqual(second, comparer);
         };
 
+        /** 
+         * Determines whether two sequences are equal with an optional equality comparer
+         * 
+         * @param {Enumerable} second An Enumerable to compare to the first sequence.
+         * @param {Function} [comparer] An optional function to use to compare elements.
+         * @returns {Boolean} true if the two source sequences are of equal length and their corresponding elements compare equal according to comparer; otherwise, false.
+         */
         EnumerablePrototype.sequenceEqual = function (second, comparer) {
             comparer || (comparer = defaultEqualityComparer);
             var e1 = this.getEnumerator(), e2 = second.getEnumerator();
@@ -901,173 +1344,241 @@
                     return false;
                 }
                 return true;
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                e1.dispose();
-                e2.dispose();
+                checkAndDispose(e1);
+                checkAndDispose(e2);
             }
         };
 
+        /**
+         * Returns the only element of a sequence that satisfies an optional condition, and throws an exception if more than one such element exists.
+         * Or returns the only element of a sequence, and throws an exception if there is not exactly one element in the sequence.
+         *
+         * @example
+         *   res = sequence.single();
+         *   res = sequence.single(function (x) { return x % 2 === 0; });
+         *
+         * @param {Function} [predicate] A function to test an element for a condition.
+         * @returns {Any} The single element of the input sequence that satisfies a condition if specified, else the first element.
+         */
         EnumerablePrototype.single = function (predicate) {
             if (predicate) {
                 return this.where(predicate).single();
             }
-            var enumerator = this.getEnumerator();
+            var e = this.getEnumerator();
             try {
-                if (!enumerator.moveNext()) {
+                if (!e.moveNext()) {
                     throw new Error(seqNoElements);
                 }
-                var current = enumerator.getCurrent();
-                if (enumerator.moveNext()) {
+                var current = e.getCurrent();
+                if (e.moveNext()) {
                     throw new Error(invalidOperation);
                 }
                 return current;
-            } catch (e) {
-                throw e;
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
         };
 
+        /**
+         * Returns the only element of a sequence, or a default value if the sequence is empty; this method throws an exception if there is more than one element in the sequence.
+         * Or returns the only element of a sequence that satisfies a specified condition or a default value if no such element exists; this method throws an exception if more than one element satisfies the condition
+         *
+         * @example
+         *   res = sequence.singleOrDefault();
+         *   res = sequence.singleOrDefault(function (x) { return x % 2 === 0; });
+         *
+         * @param {Function} [predicate] A function to test an element for a condition.
+         * @returns {Any} The single element of the input sequence that satisfies the optional condition, or null if no such element is found.
+         */
         EnumerablePrototype.singleOrDefault = function (predicate) {
             if (predicate) {
                 return this.where(predicate).single();
             }
-            var enumerator = this.getEnumerator();
+            var e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    var current = enumerator.getCurrent();
-                    if (enumerator.moveNext()) {
+                while (e.moveNext()) {
+                    var current = e.getCurrent();
+                    if (e.moveNext()) {
                         throw new Error(invalidOperation);
                     }
                     return current;
                 }
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             return null;
         };        
 
+        /** 
+         * Bypasses a specified number of elements in a sequence and then returns the remaining elements.
+         *
+         * @param {Number} count The number of elements to skip before returning the remaining element
+         * @returns {Enumerable} An Enumerable that contains the elements that occur after the specified index in the input sequence.
+         */
         EnumerablePrototype.skip = function (count) {
             var parent = this;
             return new Enumerable(function () {
-                var current, skipped = false, enumerator;
+                var current, skipped = false, e;
                 return enumeratorCreate(
                     function () {
-                        enumerator || (enumerator = parent.getEnumerator());
+                        e || (e = parent.getEnumerator());
                         if (!skipped) {
                             for (var i = 0; i < count; i++) {
-                                if (!enumerator.moveNext()) {
+                                if (!e.moveNext()) {
                                     return false;
                                 }
                             }
                             skipped = true;
                         }
-                        if (!enumerator.moveNext()) {
+                        if (!e.moveNext()) {
                             return false;
                         }
-                        current = enumerator.getCurrent();
+                        current = e.getCurrent();
                         return true;
                     },
                     function () { return current; },
-                    function () { enumerator && enumerator.dispose(); }
+                    function () { checkAndDispose(e); }
                 );
             });
         };
 
+        /**
+         * Bypasses elements in a sequence as long as a specified condition is true and then returns the remaining elements. The element's index is used in the logic of the predicate function.
+         * 
+         * @param {Function} selector A function to test each source element for a condition; the second parameter of the function represents the index of the source element; the third is the Enumerable source.
+         * @param {Any} [thisArg] Object to use as this when executing selector.
+         * @returns {Enumerable} An Enumerable that contains the elements from the input sequence starting at the first element in the linear series that does not pass the test specified by predicate.
+         */
         EnumerablePrototype.skipWhile = function (selector, thisArg) {
             var parent = this;
             return new Enumerable(function () {
-                var current, skipped = false, enumerator, index = 0;
+                var current, skipped = false, e, index = 0;
                 return enumeratorCreate(
                     function () {
-                        enumerator || (enumerator = parent.getEnumerator());
+                        e || (e = parent.getEnumerator());
                         if (!skipped) {
                             while (true) {
-                                if (!enumerator.moveNext()) {
+                                if (!e.moveNext()) {
                                     return false;
                                 }
-                                if (!selector.call(thisArg, enumerator.getCurrent(), index++, parent)) {
-                                    current = enumerator.getCurrent();
+                                var c = e.getCurrent();
+                                if (!selector.call(thisArg, c, index++, parent)) {
+                                    current = c;
                                     return true;
                                 }
                             }
                             skipped = true;
                         }
-                        if (!enumerator.moveNext()) {
+                        if (!e.moveNext()) {
                             return false;
                         }
-                        current = enumerator.getCurrent();
+                        current = e.getCurrent();
                         return true;
                     },
                     function () { return current;  },
-                    function () { enumerator && enumerator.dispose(); }
+                    function () { checkAndDispose(e); }
                 );
             });
         };
 
+        /**
+         * Computes the sum of the sequence of values that are optionally obtained by invoking a transform function on each element of the input sequence.
+         * 
+         * @example
+         *  res = source.sum();
+         *  res = source.sum(function (x) { return x.value; });
+         *
+         * @param {Function} [selector] A transform function to apply to each element.
+         * @returns {Any} The sum of the values.
+         */
         EnumerablePrototype.sum = function(selector) {
             if(selector) {
                 return this.select(selector).sum();
             }
-            var s = 0, enumerator = this.getEnumerator();
+            var s = 0, e = this.getEnumerator();
             try {
-                while (enumerator.moveNext()) {
-                    s += enumerator.getCurrent();
+                while (e.moveNext()) {
+                    s += e.getCurrent();
                 }
+            } catch (ex) {
+                throw ex;
             } finally {
-                enumerator.dispose();
+                checkAndDispose(e);
             }
             return s;
         };        
 
+        /** 
+         * Returns a specified number of contiguous elements from the start of a sequence.
+         *
+         * @param {Number} count The number of elements to return.
+         * @returns {Enumerable} An Enumerable that contains the specified number of elements from the start of the input sequence.
+         */
         EnumerablePrototype.take = function (count) {
             var parent = this;
             return new Enumerable(function () {
-                var current, enumerator, myCount = count;
+                var current, e, myCount = count;
                 return enumeratorCreate(
                     function () {
-                        enumerator || (enumerator = parent.getEnumerator());
+                        e || (e = parent.getEnumerator());
                         if (myCount === 0) {
                             return false;
                         }
-                        if (!enumerator.moveNext()) {
+                        if (!e.moveNext()) {
                             myCount = 0;
                             return false;
                         }
                         myCount--;
-                        current = enumerator.getCurrent();
+                        current = e.getCurrent();
                         return true;
                     },
                     function () { return current; },
-                    function () { enumerator && enumerator.dispose(); }
+                    function () { checkAndDispose(e); }
                 );
             });
         };
 
+        /**
+         * Returns elements from a sequence as long as a specified condition is true. The element's index is used in the logic of the predicate function.
+         * 
+         * @param {Function} selector A function to test each source element for a condition; the second parameter of the function represents the index of the source element; the third is the Enumerable source.
+         * @param {Any} [thisArg] Object to use as this when executing selector.
+         * @returns {Enumerable} An Enumerable that contains elements from the input sequence that occur before the element at which the test no longer passes.
+         */
         EnumerablePrototype.takeWhile = function (selector, thisArg) {
             var parent = this;
             return new Enumerable(function () {
-                var current, index = 0, enumerator;
+                var current, index = 0, e;
                 return enumeratorCreate(
                     function () {
-                        enumerator || (enumerator = parent.getEnumerator());
-                        if (!enumerator.moveNext()){
+                        e || (e = parent.getEnumerator());
+                        if (!e.moveNext()){
                             return false;
                         }
-                        current = enumerator.getCurrent();
+                        current = e.getCurrent();
                         if (!selector.call(thisArg, current, index++, parent)){
                             return false;
                         }
                         return true;
                     },
                     function () { return current; },
-                    function () { enumerator && enumerator.dispose(); }
+                    function () { checkAndDispose(e); }
                 );
             });
         };        
 
+        /**
+         * Creates an array from an Enumerable
+         *
+         * @returns {Array} An array that contains the elements from the input sequence.
+         */
         EnumerablePrototype.toArray = function () {
             var results = [],
                 e = this.getEnumerator();
@@ -1076,74 +1587,156 @@
                     results.push(e.getCurrent());
                 }
                 return results;
+            } catch (e) {
+                throw e;
             } finally {
-                e.dispose();
+                checkAndDispose(e);
             }
         };
 
+        EnumerablePrototype.toDictionary = function (keySelector, elementSelector, comparer) {
+            elementSelector || (elementSelector = identity);
+            comparer || (comparer = defaultEqualityComparer);
+            var map = new Dictionary(0, comparer),
+                e = this.getEnumerator(); 
+            try {
+                while (e.moveNext()) {
+                    var c = e.getCurrent(),
+                        key = keySelector(c);
+                        elem = elementSelector(c);
+                    map.add(key, elem);                    
+                }
+                return map;
+            } catch (ex) {
+                throw ex;
+            } finally {
+                checkAndDispose(e);
+            }
+        };
+
+        EnumerablePrototype.toLookup = function (keySelector, elementSelector, comparer) {
+            elementSelector || (elementSelector = identity);
+            comparer || (comparer = defaultEqualityComparer);
+            var map = new Dictionary(0, comparer),
+                e = this.getEnumerator();
+            try {
+                while (e.moveNext()) {
+                    var c = e.getCurrent(),
+                        key = keySelector(c);
+                        elem = elementSelector(c);
+                    if (!map.has(key)) {
+                        map.add(key, []);
+                    }
+                    map.get(key).push(elem);
+                }
+                return new Lookup(map);
+            } catch (ex) {
+                throw ex;
+            } finally {
+                checkAndDispose(e);
+            }
+        };
+
+        /**
+         * Creates a new Enumerable with all elements that pass the test implemented by the provided function.
+         *
+         * @param {Function} selector 
+         *  selector is invoked with three arguments: 
+         *      The value of the element
+         *      The index of the element
+         *      The Enumerable object being traversed
+         * @param {Any} [thisArg] Object to use as this when executing selector.
+         * @returns {Enumerable} An Enumerable that contains elements from the input sequence that satisfy the condition.
+         */
         EnumerablePrototype.where = function (selector, thisArg) {
             var parent = this;
             return new Enumerable(function () {
-                var current, index = 0, enumerator;
+                var current, index = 0, e;
                 return enumeratorCreate(
                     function () {
-                        enumerator || (enumerator = parent.getEnumerator());
+                        e || (e = parent.getEnumerator());
                         while (true) {
-                            if (!enumerator.moveNext()) {
+                            if (!e.moveNext()) {
                                 return false;
                             }
-                            current = enumerator.getCurrent();
-                            if (selector.call(thisArg, current, index++, parent)) {
+                            var c = e.getCurrent();
+                            if (selector.call(thisArg, c, index++, parent)) {
+                                current = c;
                                 return true;
                             }
                         }
                     },
                     function () { return current; },
-                    function () { enumerator.dispose(); }
+                    function () { checkAndDispose(e); }
                 );
             });
         };
 
+        /**
+         * Creates a new Enumerable with all elements that pass the test implemented by the provided function.
+         *
+         * @param {Function} selector 
+         *  selector is invoked with three arguments: 
+         *      The value of the element
+         *      The index of the element
+         *      The Enumerable object being traversed
+         * @param {Any} [thisArg] Object to use as this when executing selector.
+         * @returns {Enumerable} An Enumerable that contains elements from the input sequence that satisfy the condition.
+         */
+        EnumerablePrototype.filter = EnumerablePrototype.where;
+
+        /**
+         * Produces the set union of two sequences with an optional equality comparer.
+         *
+         * @param {Enumerable} second An Enumerable whose distinct elements form the second set for the union.
+         * @param {Function} [comparer] An optional function to compare values.
+         * @returns {Enumerable} An Enumerable that contains the elements from both input sequences, excluding duplicates.
+         */
         EnumerablePrototype.union = function(second, comparer) {
             comparer || (comparer = defaultEqualityComparer);
             var parent = this;
             return enumerableCreate(function () {
-                var current, enumerator, map = [], firstDone = false, secondDone = false;
+                var current, e, map = [], firstDone = false, secondDone = false;
                 return enumeratorCreate(
                     function () {
                         while (true) {
-                            if (!enumerator) {
+                            if (!e) {
                                 if (secondDone) {
                                     return false;
                                 }
                                 if (!firstDone) {
-                                    enumerator = parent.getEnumerator();
+                                    e = parent.getEnumerator();
                                     firstDone = true;
                                 } else {
-                                    enumerator = second.getEnumerator();
+                                    e = second.getEnumerator();
                                     secondDone = true;
                                 }
                             }
-                            if (enumerator.moveNext()) {
-                                current = enumerator.getCurrent();
+                            if (e.moveNext()) {
+                                current = e.getCurrent();
                                 if (arrayIndexOf.call(map, current, comparer) === -1) {
                                     map.push(current);
                                     return true;
                                 }
                             } else {
-                                enumerator.dispose();
-                                enumerator = null;
+                                checkAndDispose(e);
+                                e = null;
                             }
                         }
                     },
                     function () { return current; },
-                    function () {
-                        enumerator && enumerator.dispose();
-                    }
+                    function () { checkAndDispose(e); }
                 );
             });
         };          
 
+        /**
+         * Applies a specified function to the corresponding elements of two sequences, which produces a sequence of the results.
+         *
+         * @param {Enumerable} right The second sequence to merge.
+         * @param {Function} selector A function that specifies how to merge the elements from the two sequences.
+         * @returns {Enumerable} An Enumerable that contains merged elements of two input sequences.
+         */
         EnumerablePrototype.zip = function (right, selector) {
             var parent = this;
             return new Enumerable(function () {
@@ -1165,8 +1758,8 @@
                         return current;
                     },
                     function () {
-                        e1.dispose();
-                        e2.dispose();
+                        checkAndDispose(e1);
+                        checkAndDispose(e2);
                     }
                 );
             });
@@ -1175,14 +1768,30 @@
         return Enumerable;
     }());
 
+    /**
+     * Concatenates all given sequences as arguments.
+     *
+     * @returns {Enumerable} An Enumerable that contains the concatenated elements of the input sequences.
+     */
     var enumerableConcat = Enumerable.concat = function () {
         return enumerableFromArray(arguments).selectMany(identity);
     };
 
+    /**
+     * Creates an enumerable sequence based on an enumerator factory function. 
+     *
+     * @param {Function} getEnumerator Enumerator factory function.
+     * @returns {Enumerable} Sequence that will invoke the enumerator factory upon a call to getEnumerator.
+     */
     var enumerableCreate = Enumerable.create = function (getEnumerator) {
         return new Enumerable(getEnumerator);
     };
 
+    /**
+     * Returns an empty Enumerable.
+     * 
+     * @returns {Enumerable} An empty Enumerable
+     */
     var enumerableEmpty = Enumerable.empty = function () {
         return new Enumerable(function () {
             return enumeratorCreate(
@@ -1192,6 +1801,12 @@
         });
     };
 
+    /**
+     * Converts an Array to an Enumerable sequence
+     *
+     * @param {Array} An array to convert to an Enumerable sequence.
+     * @returns {Enumerable} An Enumerable sequence created by the values in the array.
+     */
     var enumerableFromArray = Enumerable.fromArray = function (array) {
         return new Enumerable(function () {
             var index = 0, value;
@@ -1213,8 +1828,8 @@
     /**
      * Returns a sequence with a single element.
      * 
-     * @param value Single element of the resulting sequence.
-     * @return Sequence with a single element.
+     * @param {Any} value Single element of the resulting sequence.
+     * @returns {Enumerable} Sequence with a single element.
      */
     var enumerableReturn = Enumerable.returnValue = function (value) {
         return new Enumerable(function () {
@@ -1233,6 +1848,21 @@
         });
     };
 
+    /**
+     * Returns a sequence with a single element.
+     * 
+     * @param {Any} value Single element of the resulting sequence.
+     * @returns {Enumerable} Sequence with a single element.
+     */
+    Enumerable['return'] = enumerableReturn;
+
+    /** 
+     * Generates a sequence of integral numbers within a specified range.
+     *
+     * @param {Number} start The value of the first integer in the sequence.
+     * @param {Number} count The number of sequential integers to generate.
+     * @returns {Enumerable} An Enumerable that contains a range of sequential integral numbers.
+     */
     var enumerableRange = Enumerable.range = function (start, count) {
         return new Enumerable(function () {
             var current = start - 1, end = start + count - 1;
@@ -1250,6 +1880,13 @@
         });
     };  
 
+    /**
+     * Generates a sequence that contains one repeated value.
+     *
+     * @param {Any} value The value to be repeated.
+     * @param {Number} repeatCount The number of times to repeat the value in the generated sequence.
+     * @returns {Enumerable} An Enumerable that contains a repeated value.
+     */
     var enumerableRepeat = Enumerable.repeat = function (value, repeatCount) {
         return new Enumerable(function () {
             var count = repeatCount == null ? -1 : repeatCount, hasRepeatCount = repeatCount != null;
@@ -1376,19 +2013,21 @@
 
         return OrderedEnumerable;
     }());
-    ;    // Check for AMD
+    
+    // Check for AMD
     if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
-        window.Ix = root;
+        window.Ix = Ix;
         return define(function () {
-            return root;
+            return Ix;
         });
     } else if (freeExports) {
         if (typeof module == 'object' && module && module.exports == freeExports) {
-            module.exports = root;
+            module.exports = Ix;
         } else {
-            freeExports = root;
+            freeExports = Ix;
         }
     } else {
-        window.Ix = root;
+        window.Ix = Ix;
     }
-    ;}(this));
+    
+}(this));
