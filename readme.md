@@ -1,4 +1,4 @@
-# The Reactive Extensions for JavaScript... #
+# The Interactive Extensions for JavaScript... #
 *...is a set of libraries to compose pull-based collections and LINQ-style query operators in JavaScript*
 
 This project has moved to [CodePlex](http://rx.codeplex.com/) and only serves as a mirror.
