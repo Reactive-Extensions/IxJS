@@ -588,7 +588,7 @@
                             }
 
                             var key = outerKeySelector(e.getCurrent());
-                            innerElements = lookup.get(key).toArray();
+                            innerElements = lookup.has(key) ? lookup.get(key).toArray() : [];
                         }
                     },
                     function () { return current; },

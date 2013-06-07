@@ -367,7 +367,7 @@
         var LookupPrototype = Lookup.prototype;
 
         LookupPrototype.has = function (key) {
-            return this.map.containsKey(key);
+            return this.map.has(key);
         };
 
         LookupPrototype.length = function () {
@@ -1005,7 +1005,7 @@
                             }
 
                             var key = outerKeySelector(e.getCurrent());
-                            innerElements = lookup.get(key).toArray();
+                            innerElements = lookup.has(key) ? lookup.get(key).toArray() : [];
                         }
                     },
                     function () { return current; },
@@ -1594,6 +1594,19 @@
             }
         };
 
+        /**
+         * Creates a Dictionary from an Enumerable according to a specified key selector function, a comparer, and an element selector function.
+         * 
+         * @example
+         *  res = source.toDictionary(keySelector);
+         *  res = source.toDictionary(keySelector, elementSelector);
+         *  res = source.toDictionary(keySelector, elementSelector, comparer);         
+         *
+         * @param {Function} keySelector A function to extract a key from each element.
+         * @param {Function} [elementSelector] A transform function to produce a result element value from each element.
+         * @param {Function} [comparer] A function to compare keys.
+         * @returns {Dictionary} A Dictionary that contains values selected from the input sequence.
+         */
         EnumerablePrototype.toDictionary = function (keySelector, elementSelector, comparer) {
             elementSelector || (elementSelector = identity);
             comparer || (comparer = defaultEqualityComparer);
@@ -1614,6 +1627,19 @@
             }
         };
 
+        /**
+         * Creates a Lookup from an Enumerable according to a specified key selector function, a comparer and an element selector function.
+         * 
+         * @example
+         *  res = source.toLookup(keySelector);
+         *  res = source.toLookup(keySelector, elementSelector);
+         *  res = source.toLookup(keySelector, elementSelector, comparer);         
+         *
+         * @param {Function} keySelector A function to extract a key from each element.
+         * @param {Function} [elementSelector] A transform function to produce a result element value from each element.
+         * @param {Function} [comparer] A function to compare keys.
+         * @returns {Lookup} A Lookup that contains values selected from the input sequence.
+         */
         EnumerablePrototype.toLookup = function (keySelector, elementSelector, comparer) {
             elementSelector || (elementSelector = identity);
             comparer || (comparer = defaultEqualityComparer);
