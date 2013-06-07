@@ -7,7 +7,7 @@
         var LookupPrototype = Lookup.prototype;
 
         LookupPrototype.has = function (key) {
-            return this.map.containsKey(key);
+            return this.map.has(key);
         };
 
         LookupPrototype.length = function () {

@@ -367,7 +367,7 @@
         var LookupPrototype = Lookup.prototype;
 
         LookupPrototype.has = function (key) {
-            return this.map.containsKey(key);
+            return this.map.has(key);
         };
 
         LookupPrototype.length = function () {
@@ -440,7 +440,7 @@
             } finally {
                 enumerator.dispose();
             }
-            return resultSelector ? resultSelector(accumulate) : accumulate;         
+            return resultSelector ? resultSelector(accumulate) : accumulate;
         }
 
         function aggregate1 (func) {
@@ -453,7 +453,7 @@
                 while (enumerator.moveNext()) {
                     accumulate = func(accumulate, enumerator.getCurrent(), i++, this);
                 }
-            } catch (e) { 
+            } catch (e) {
                 throw e;
             } finally {
                 enumerator.dispose();
@@ -463,7 +463,7 @@
 
         /**
          * Applies an accumulator function over a sequence. The specified seed value is used as the initial accumulator value, and the optional function is used to select the result value.
-         * 
+         *
          * @example
          * sequence.aggregate(0, function (acc, item, index, seq) { return acc + x; });
          * sequence.aggregate(function (acc, item, index, seq) { return acc + x; });
@@ -486,7 +486,7 @@
          * sequence.reduce(function (acc, x) { return acc + x; });
          *
          * @param {Function} func Function to execute on each value in the sequence, taking four arguments:
-         *  previousValue The value previously returned in the last invocation of the callback, or initialValue, if supplied. 
+         *  previousValue The value previously returned in the last invocation of the callback, or initialValue, if supplied.
          *  currentValue The current element being processed in the sequence.
          *  index The index of the current element being processed in the sequence.
          *  sequence The sequence reduce was called upon.
@@ -494,7 +494,7 @@
          * @return The transformed final accumulator value.
          */
         EnumerablePrototype.reduce = function (/*func, seed */) {
-            return arguments.length === 2 ? 
+            return arguments.length === 2 ?
                 aggregate.call(this, arguments[1], arguments[0]) :
                 aggregate1.apply(this, arguments);
         };
@@ -522,7 +522,7 @@
                 checkAndDispose(e);
             }
             return true;
-        }; 
+        };
 
         EnumerablePrototype.every = EnumerablePrototype.all;
 
@@ -549,12 +549,12 @@
             } finally {
                 checkAndDispose(e);
             }
-            return false;   
-        }; 
+            return false;
+        };
 
         EnumerablePrototype.some = EnumerablePrototype.any;
 
-        /** 
+        /**
          * Computes the average of a sequence of values that are obtained by invoking a transform function on each element of the input sequence.
          *
          * @param {Function} [selector] An optional transform function to apply to each element.
@@ -571,7 +571,7 @@
                     sum += e.getCurrent();
                 }
             } catch (ex) {
-                throw ex;                
+                throw ex;
             } finally {
                 checkAndDispose(e);
             }
@@ -581,9 +581,9 @@
             return sum / count;
         };
 
-        /** 
+        /**
          * Concatenates two sequences.
-         * 
+         *
          * @return {Enumerable} An Enumerable that contains the concatenated elements of the two input sequences.
          */
         EnumerablePrototype.concat = function () {
@@ -600,7 +600,7 @@
          * @returns {Boolean} true if the source sequence contains an element that has the specified value; otherwise, false.
          */
         EnumerablePrototype.contains = function(value, comparer) {
-            comparer || (comparer = defaultEqualityComparer); 
+            comparer || (comparer = defaultEqualityComparer);
             var e = this.getEnumerator();
             try {
                 while (e.moveNext()) {
@@ -609,7 +609,7 @@
                     }
                 }
             } catch (ex) {
-                throw ex;                
+                throw ex;
             } finally {
                 checkAndDispose(e);
             }
@@ -639,7 +639,7 @@
             } finally {
                 checkAndDispose(e);
             }
-            return c;       
+            return c;
         };
 
         /**
@@ -660,7 +660,7 @@
                         if (isFirst) {
                             isFirst = false;
                             if (!e.moveNext()) {
-                                current = defaultValue;            
+                                current = defaultValue;
                                 hasDefault = true;
                                 return true;
                             } else {
@@ -691,17 +691,17 @@
 
         function arrayRemove(item, comparer) {
             var idx = arrayIndexOf.call(this, item, comparer);
-            if (idx === -1) { 
+            if (idx === -1) {
                 return false;
             }
             this.splice(idx, 1);
             return true;
         }
-        
+
         /**
          * Returns distinct elements from a sequence by using an optional comparer function to compare values.
          *
-         * 
+         *
          * @param {Function} [comparer] a comparer function to compare the values.
          * @returns {Enumerable} An Enumerable that contains distinct elements from the source sequence.
          */
@@ -791,7 +791,7 @@
                     function () { checkAndDispose(fe); }
                 );
             });
-        };        
+        };
 
         /**
          * Returns the first element in a sequence that satisfies a specified condition if specified, else the first element.
@@ -811,7 +811,7 @@
                 throw ex;
             } finally {
                 checkAndDispose(e);
-            }       
+            }
             throw new Error(seqNoElements);
         };
 
@@ -834,7 +834,7 @@
                 throw ex;
             } finally {
                 checkAndDispose(e);
-            }       
+            }
             return null;
         };
 
@@ -861,17 +861,17 @@
             } finally {
                 checkAndDispose(e);
             }
-        };       
+        };
 
         /**
-         * Groups the elements of a sequence according to a specified key selector function and creates a result value from each group and its key. 
+         * Groups the elements of a sequence according to a specified key selector function and creates a result value from each group and its key.
          * Key values are compared by using a specified comparer, and the elements of each group are projected by using a specified function.
          *
          * @example
          * res = sequence.groupBy(keySelector);
          * res = sequence.groupBy(keySelector, elementSelector);
          * res = sequence.groupBy(keySelector, elementSelector, resultSelector);
-         * res = sequence.groupBy(keySelector, elementSelector, resultSelector, comparer);              
+         * res = sequence.groupBy(keySelector, elementSelector, resultSelector, comparer);
          *
          * @param {Function} keySelector A function to extract the key for each element.
          * @param {Function} [elementSelector] A function to map each source element to an element in grouping.
@@ -885,7 +885,7 @@
             var parent = this;
             return new Enumerable(function () {
                 var map = new Dictionary(0, comparer), keys = [], index = 0, value, key,
-                    pe = parent.getEnumerator(), 
+                    pe = parent.getEnumerator(),
                     parentCurrent,
                     parentKey,
                     parentElement;
@@ -899,7 +899,7 @@
                         }
                         parentElement = elementSelector(parentCurrent);
                         map.get(parentKey).push(parentElement);
-                    }                    
+                    }
                 } catch(ex) {
                     throw ex;
                 } finally {
@@ -928,7 +928,7 @@
         };
 
         /**
-         * Correlates the elements of two sequences based on equality of keys and groups the results. 
+         * Correlates the elements of two sequences based on equality of keys and groups the results.
          *
          * @param {Enumerable} inner The sequence to join to the first sequence.
          * @param {Function} outerKeySelector A function to extract the join key from each element of the first sequence.
@@ -959,14 +959,14 @@
                         current = resultSelector(c, innerElement);
                         return true;
                     },
-                    function () { return current; }, 
+                    function () { return current; },
                     function () { checkAndDispose(e); }
                 );
             });
         };
 
-        /** 
-         * Correlates the elements of two sequences based on matching keys. 
+        /**
+         * Correlates the elements of two sequences based on matching keys.
          *
          * @param {Enumerable} inner The sequence to join to the first sequence.
          * @param {Function} outerKeySelector A function to extract the join key from each element of the first sequence.
@@ -1005,13 +1005,13 @@
                             }
 
                             var key = outerKeySelector(e.getCurrent());
-                            innerElements = lookup.get(key).toArray();
+                            innerElements = lookup.has(key) ?  lookup.get(key).toArray() : [];
                         }
                     },
                     function () { return current; },
                     function () { checkAndDispose(e); }
                 );
-            });          
+            });
         };
 
         /**
@@ -1028,7 +1028,7 @@
                 try {
                     while (se.moveNext()) {
                         map.push(se.getCurrent());
-                    }                    
+                    }
                 } catch (ex) {
                     throw ex;
                 } finally {
@@ -1060,11 +1060,11 @@
 
         /**
          * Returns the last element of a sequence that satisfies an optional condition if specified, else the last element.
-         * 
+         *
          * @example
          *   seq.last();
          *   seq.last(function (x) { return x % 2 === 0; });
-         *         
+         *
          * @param {Function} [predicate] A function to test each element for a condition.
          * @returns {Any} The last element in the sequence that passes the test in the specified predicate function if specified, else the last element.
          */
@@ -1082,7 +1082,7 @@
                 throw ex;
             } finally {
                 checkAndDispose(e);
-            }       
+            }
             if (hasValue) {
                 return value;
             }
@@ -1091,7 +1091,7 @@
 
         /**
          * Returns the last element of a sequence that satisfies an optioanl condition or a null if no such element is found.
-         * 
+         *
          * @example
          *   seq.lastOrDefault();
          *   seq.lastOrDefault(function (x) { return x % 2 === 0; });
@@ -1123,11 +1123,11 @@
          *
          * @param {Function} [selector] A transform function to apply to each element.
          * @returns {Any} The maximum value in the sequence.
-         */ 
+         */
         EnumerablePrototype.max = function(selector) {
             if(selector) {
                 return this.select(selector).max();
-            }       
+            }
             var m, hasElement = false, e = this.getEnumerator();
             try {
                 while (e.moveNext()) {
@@ -1150,7 +1150,7 @@
                 throw new Error(seqNoElements);
             }
             return m;
-        };        
+        };
 
         /**
          * Invokes an optional transform function on each element of a generic sequence and returns the minimum resulting value.
@@ -1161,7 +1161,7 @@
         EnumerablePrototype.min = function(selector) {
             if(selector) {
                 return this.select(selector).min();
-            }       
+            }
             var m, hasElement = false, e = this.getEnumerator();
             try {
                 while(e.moveNext()) {
@@ -1184,9 +1184,9 @@
                 throw new Error(seqNoElements);
             }
             return m;
-        };         
+        };
 
-        /** 
+        /**
          * Sorts the elements of a sequence in ascending order by using an optional comparer.
          *
          * @param {Function} keySelector A function to extract a key from an element.
@@ -1199,7 +1199,7 @@
 
         /**
          * Sorts the elements of a sequence in descending order by using a specified comparer.
-         * 
+         *
          * @param {Function} keySelector A function to extract a key from an element.
          * @param {Function} [comparer] An optional comparer function to compare keys.
          * @returns {Enumerable} An Enumerable whose elements are sorted in descending order according to a key.
@@ -1208,7 +1208,7 @@
             return new OrderedEnumerable(this, keySelector, comparer, true);
         };
 
-        /** 
+        /**
          * Inverts the order of the elements in a sequence.
          *
          * @returns {Enumerable} A sequence whose elements correspond to those of the input sequence in reverse order.
@@ -1225,11 +1225,11 @@
                 checkAndDispose(e);
             }
             return enumerableFromArray(arr);
-        };        
+        };
 
         /**
          * Projects each element of a sequence into a new form by incorporating the element's index.
-         * 
+         *
          * @param {Function} selector A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
          * @param {Any} [thisArg] An optional scope for the selector.
          * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
@@ -1255,7 +1255,7 @@
 
         /**
          * Projects each element of a sequence into a new form by incorporating the element's index.
-         * 
+         *
          * @param {Function} selector A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
          * @param {Any} [thisArg] An optional scope for the selector.
          * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
@@ -1264,7 +1264,7 @@
 
         /**
          * Projects each element of a sequence to an Enumerable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein. The index of each source element is used in the intermediate projected form of that element.
-         * 
+         *
          * @example
          *   seq.selectMany(selector);
          *   seq.selectMany(collectionSelector, resultSelector);
@@ -1290,7 +1290,7 @@
                             }
                             if (ie.moveNext()) {
                                 current = ie.getCurrent();
-                                
+
                                 if (resultSelector) {
                                     var o = oe.getCurrent();
                                     current = resultSelector(o, current);
@@ -1306,15 +1306,15 @@
                     function () { return current; },
                     function () {
                         checkAndDispose(ie);
-                        checkAndDispose(oe);  
+                        checkAndDispose(oe);
                     }
                 );
             });
         };
 
-        /** 
+        /**
          * Determines whether two sequences are equal with an optional equality comparer
-         * 
+         *
          * @param {Enumerable} first An Enumerable to compare to second.
          * @param {Enumerable} second An Enumerable to compare to the first sequence.
          * @param {Function} [comparer] An optional function to use to compare elements.
@@ -1324,9 +1324,9 @@
             return first.sequenceEqual(second, comparer);
         };
 
-        /** 
+        /**
          * Determines whether two sequences are equal with an optional equality comparer
-         * 
+         *
          * @param {Enumerable} second An Enumerable to compare to the first sequence.
          * @param {Function} [comparer] An optional function to use to compare elements.
          * @returns {Boolean} true if the two source sequences are of equal length and their corresponding elements compare equal according to comparer; otherwise, false.
@@ -1414,9 +1414,9 @@
                 checkAndDispose(e);
             }
             return null;
-        };        
+        };
 
-        /** 
+        /**
          * Bypasses a specified number of elements in a sequence and then returns the remaining elements.
          *
          * @param {Number} count The number of elements to skip before returning the remaining element
@@ -1451,7 +1451,7 @@
 
         /**
          * Bypasses elements in a sequence as long as a specified condition is true and then returns the remaining elements. The element's index is used in the logic of the predicate function.
-         * 
+         *
          * @param {Function} selector A function to test each source element for a condition; the second parameter of the function represents the index of the source element; the third is the Enumerable source.
          * @param {Any} [thisArg] Object to use as this when executing selector.
          * @returns {Enumerable} An Enumerable that contains the elements from the input sequence starting at the first element in the linear series that does not pass the test specified by predicate.
@@ -1490,7 +1490,7 @@
 
         /**
          * Computes the sum of the sequence of values that are optionally obtained by invoking a transform function on each element of the input sequence.
-         * 
+         *
          * @example
          *  res = source.sum();
          *  res = source.sum(function (x) { return x.value; });
@@ -1513,9 +1513,9 @@
                 checkAndDispose(e);
             }
             return s;
-        };        
+        };
 
-        /** 
+        /**
          * Returns a specified number of contiguous elements from the start of a sequence.
          *
          * @param {Number} count The number of elements to return.
@@ -1547,7 +1547,7 @@
 
         /**
          * Returns elements from a sequence as long as a specified condition is true. The element's index is used in the logic of the predicate function.
-         * 
+         *
          * @param {Function} selector A function to test each source element for a condition; the second parameter of the function represents the index of the source element; the third is the Enumerable source.
          * @param {Any} [thisArg] Object to use as this when executing selector.
          * @returns {Enumerable} An Enumerable that contains elements from the input sequence that occur before the element at which the test no longer passes.
@@ -1572,7 +1572,7 @@
                     function () { checkAndDispose(e); }
                 );
             });
-        };        
+        };
 
         /**
          * Creates an array from an Enumerable
@@ -1594,17 +1594,30 @@
             }
         };
 
+        /**
+         * Creates a Dictionary from an Enumerable according to a specified key selector function, a comparer, and an element selector function.
+         *
+         * @example
+         *  res = source.toDictionary(keySelector);
+         *  res = source.toDictionary(keySelector, elementSelector);
+         *  res = source.toDictionary(keySelector, elementSelector, comparer);
+         *
+         * @param {Function} keySelector A function to extract a key from each element.
+         * @param {Function} [elementSelector] A transform function to produce a result element value from each element.
+         * @param {Function} [comparer] A function to compare keys.
+         * @returns {Dictionary} A Dictionary that contains values selected from the input sequence.
+         */
         EnumerablePrototype.toDictionary = function (keySelector, elementSelector, comparer) {
             elementSelector || (elementSelector = identity);
             comparer || (comparer = defaultEqualityComparer);
             var map = new Dictionary(0, comparer),
-                e = this.getEnumerator(); 
+                e = this.getEnumerator();
             try {
                 while (e.moveNext()) {
                     var c = e.getCurrent(),
                         key = keySelector(c);
                         elem = elementSelector(c);
-                    map.add(key, elem);                    
+                    map.add(key, elem);
                 }
                 return map;
             } catch (ex) {
@@ -1614,6 +1627,19 @@
             }
         };
 
+        /**
+         * Creates a Lookup from an Enumerable according to a specified key selector function, a comparer and an element selector function.
+         *
+         * @example
+         *  res = source.toLookup(keySelector);
+         *  res = source.toLookup(keySelector, elementSelector);
+         *  res = source.toLookup(keySelector, elementSelector, comparer);
+         *
+         * @param {Function} keySelector A function to extract a key from each element.
+         * @param {Function} [elementSelector] A transform function to produce a result element value from each element.
+         * @param {Function} [comparer] A function to compare keys.
+         * @returns {Lookup} A Lookup that contains values selected from the input sequence.
+         */
         EnumerablePrototype.toLookup = function (keySelector, elementSelector, comparer) {
             elementSelector || (elementSelector = identity);
             comparer || (comparer = defaultEqualityComparer);
@@ -1640,8 +1666,8 @@
         /**
          * Creates a new Enumerable with all elements that pass the test implemented by the provided function.
          *
-         * @param {Function} selector 
-         *  selector is invoked with three arguments: 
+         * @param {Function} selector
+         *  selector is invoked with three arguments:
          *      The value of the element
          *      The index of the element
          *      The Enumerable object being traversed
@@ -1675,8 +1701,8 @@
         /**
          * Creates a new Enumerable with all elements that pass the test implemented by the provided function.
          *
-         * @param {Function} selector 
-         *  selector is invoked with three arguments: 
+         * @param {Function} selector
+         *  selector is invoked with three arguments:
          *      The value of the element
          *      The index of the element
          *      The Enumerable object being traversed
@@ -1728,7 +1754,7 @@
                     function () { checkAndDispose(e); }
                 );
             });
-        };          
+        };
 
         /**
          * Applies a specified function to the corresponding elements of two sequences, which produces a sequence of the results.
@@ -1778,7 +1804,7 @@
     };
 
     /**
-     * Creates an enumerable sequence based on an enumerator factory function. 
+     * Creates an enumerable sequence based on an enumerator factory function.
      *
      * @param {Function} getEnumerator Enumerator factory function.
      * @returns {Enumerable} Sequence that will invoke the enumerator factory upon a call to getEnumerator.
@@ -1789,7 +1815,7 @@
 
     /**
      * Returns an empty Enumerable.
-     * 
+     *
      * @returns {Enumerable} An empty Enumerable
      */
     var enumerableEmpty = Enumerable.empty = function () {
@@ -1827,7 +1853,7 @@
 
     /**
      * Returns a sequence with a single element.
-     * 
+     *
      * @param {Any} value Single element of the resulting sequence.
      * @returns {Enumerable} Sequence with a single element.
      */
@@ -1850,13 +1876,13 @@
 
     /**
      * Returns a sequence with a single element.
-     * 
+     *
      * @param {Any} value Single element of the resulting sequence.
      * @returns {Enumerable} Sequence with a single element.
      */
     Enumerable['return'] = enumerableReturn;
 
-    /** 
+    /**
      * Generates a sequence of integral numbers within a specified range.
      *
      * @param {Number} start The value of the first integer in the sequence.
@@ -1878,7 +1904,7 @@
                 function () { return current; }
             );
         });
-    };  
+    };
 
     /**
      * Generates a sequence that contains one repeated value.
@@ -1902,7 +1928,7 @@
                 function () { return value; }
             );
         });
-    };          
+    };
 
     function EnumerableSorter (keySelector, comparer, descending, next) {
         this.keySelector = keySelector;
@@ -1957,7 +1983,7 @@
                     right = j;
                 }
             } while (left < right);
-        }     
+        }
     };
 
     var OrderedEnumerable = (function () {
@@ -2013,7 +2039,8 @@
 
         return OrderedEnumerable;
     }());
-    
+
+
     // Check for AMD
     if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
         window.Ix = Ix;
