@@ -1,6 +1,31 @@
 # The Interactive Extensions for JavaScript... #
 *...is a set of libraries to compose pull-based collections and LINQ-style query operators in JavaScript*
 
+The Interactive Extensions for JavaScript (IxJS) is an implementation of Language Integrated Query (LINQ) to Objects in native JavaScript with a core set of operators on par with the [.NET implementation](http://msdn.microsoft.com/en-us/library/vstudio/bb397926.aspx).  This implementation uses the same techniques for lazy evaluation of chained functions, for example map/select and filter/where.  This allows you as the user to write rich expressive queries against a number of data sources without taking a performance hit.  
+
+We provide two files, a core implementation of LINQ to Objects in l2o.js and the Interactive Extensions in ix.js.  The Interactive Extensions is a set of functions that were found to be useful for the Reactive Extensions (Rx) and were ported from the push model of Rx to a pull model.
+
+Getting started is easy.  For example, we could generate data, filter it and then display the results:
+
+	// Generate the data
+	var data = Ix.Enumerable.range(0, 10);
+
+	// Query the data
+	var query = data
+		.map( function (x) {
+			return x * x;
+		})
+		.filter( function (x) {
+			return x % 3 === 0;
+		});
+
+	// Now execute the query
+	query.forEach( function (x, idx) {
+		console.log(x, idx);
+	});
+
+Note the execution of the query doesn't take place until forEach is called.
+
 This project has moved to [CodePlex](http://rx.codeplex.com/) and only serves as a mirror.
 
 ## About the Interactive Extensions Extensions ##
@@ -10,13 +35,9 @@ This set of libraries include:
 - **l2o.js** - Core LINQ to Objects library
 - **ix.js** - Interactive Extensions for JavaScript
 
-## Getting Started ##
-
-Coming Soon
-
 ##  API Documentation ##
 
-Coming Soon
+- [Ix.Enumerable class](https://github.com/Reactive-Extensions/IxJS/wiki/Enumerable)
 
 ## Installation and Usage ##
 
