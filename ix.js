@@ -17,10 +17,11 @@
     }
 }(this, function (global, exp, root, undefined) {
     
+    var isEqual = Ix.Internals.isEqual;
     function noop () { }
     function identity (x) { return x; }
     function defaultComparer (x, y) { return x > y ? 1 : x < y ? -1 : 0; }
-    function defaultEqualityComparer (x, y) { return x === y; }
+    function defaultEqualityComparer (x, y) { return isEqual(x, y); }
 
     function arrayIndexOf(key, comparer) {
         comparer || (comparer = defaultEqualityComparer);
