@@ -6,18 +6,19 @@
 
     /**
      * Lazily invokes an action for each value in the sequence, and executes an action upon successful or exceptional termination.
-     * 
-     * e.doAction(onNext);
-     * e.doAction(onNext, onError);
-     * e.doAction(onNExt, onError, onCompleted);
-     * e.doAction(observer);
+     * There is an alias for this method doAction for browsers <IE9.
+     * @example
+     * e.do(onNext);
+     * e.do(onNext, onError);
+     * e.do(onNExt, onError, onCompleted);
+     * e.do(observer);
 
      * @param onNext Action to invoke for each element or Observer.
      * @param onError Action to invoke on exceptional termination of the sequence.
      * @param onCompleted Action to invoke on successful termination of the sequence.
-     * @return Sequence exhibiting the specified side-effects upon enumeration.
+     * @returns {Enumerable} Sequence exhibiting the specified side-effects upon enumeration.
      */
-    EnumerablePrototype.doAction = function (onNext, onError, onCompleted) {
+    EnumerablePrototype['do'] = EnumerablePrototype.doAction = function (onNext, onError, onCompleted) {
         var oN, oE, oC, self = this;
         if (typeof onNext === 'object') {
             oN = functionBind(onNext.onNext, onNext);
@@ -54,9 +55,12 @@
     
     /**
      * Generates a sequence of buffers over the source sequence, with specified length and possible overlap.
-     * @param count Number of elements for allocated buffers.
-     * @param skip Number of elements to skip between the start of consecutive buffers.
-     * @return Sequence of buffers containing source sequence elements.
+     * @example
+     *  var result = Enumerable.range(0, 10).bufferWithCount(2);
+     *  var result = Enumerable.range(0, 10).bufferWithCount(5, 1);
+     * @param {Number} count Number of elements for allocated buffers.
+     * @param {Number} [skip] Number of elements to skip between the start of consecutive buffers.
+     * @returns {Enumerable} Sequence of buffers containing source sequence elements.
      */
     EnumerablePrototype.bufferWithCount = function (count, skip) {
         var parent = this;
@@ -99,7 +103,7 @@
 
     /**
      * Ignores all elements in the source sequence.
-     * @return Source sequence without its elements.
+     * @returns {Enumerable} Source sequence without its elements.
      */
     EnumerablePrototype.ignoreElements = function() {
         var parent = this;
@@ -123,7 +127,7 @@
      * Returns elements with a distinct key value by using the specified equality comparer to compare key values.
      * @param keySelector Key selector.
      * @param comparer Comparer used to compare key values.
-     * @return Sequence that contains the elements from the source sequence with distinct key values.
+     * @returns {Enumerable} Sequence that contains the elements from the source sequence with distinct key values.
      */
     EnumerablePrototype.distinctBy = function(keySelector, comparer) {
         comparer || (comparer = defaultEqualityComparer);
@@ -153,7 +157,7 @@
      * Returns consecutive distinct elements based on a key value by using the specified equality comparer to compare key values.
      * @param keySelector Key selector.
      * @param comparer Comparer used to compare key values.
-     * @return Sequence without adjacent non-distinct elements.
+     * @returns {Enumerable} Sequence without adjacent non-distinct elements.
      */
     EnumerablePrototype.distinctUntilChanged = function (keySelector, comparer) {
         keySelector || (keySelector = identity);
@@ -190,7 +194,7 @@
     /**
      * Expands the sequence by recursively applying a selector function.
      * @param selector Selector function to retrieve the next sequence to expand.
-     * @return Sequence with results from the recursive expansion of the source sequence.
+     * @returns {Enumerable} Sequence with results from the recursive expansion of the source sequence.
      */
     EnumerablePrototype.expand = function(selector) {
         var parent = this;
@@ -222,7 +226,7 @@
     /**
      * Returns the source sequence prefixed with the specified value.
      * @param values Values to prefix the sequence with.
-     * @return Sequence starting with the specified prefix value, followed by the source sequence.
+     * @returns {Enumerable} Sequence starting with the specified prefix value, followed by the source sequence.
      */
     EnumerablePrototype.startWith = function () {
         return enumerableConcat(enumerableFromArray(slice.call(arguments)), this);
@@ -281,7 +285,7 @@
      * Generates a sequence of accumulated values by scanning the source sequence and applying an accumulator function.
      * @param seed Accumulator seed value.
      * @param accumulator Accumulation function to apply to the current accumulation value and each element of the sequence.
-     * @return Sequence with all intermediate accumulation values resulting from scanning the sequence.
+     * @returns {Enumerable} Sequence with all intermediate accumulation values resulting from scanning the sequence.
      */
     EnumerablePrototype.scan = function (/* seed, accumulator */) {
         var f = arguments.length === 1 ? scan1 : scan;
@@ -291,7 +295,7 @@
     /**
      * Returns a specified number of contiguous elements from the end of the sequence.
      * @param count The number of elements to take from the end of the sequence.
-     * @return Sequence with the specified number of elements counting from the end of the source sequence.
+     * @returns {Enumerable} Sequence with the specified number of elements counting from the end of the source sequence.
      */
     EnumerablePrototype.takeLast = function (count) {
         var parent = this;
@@ -324,7 +328,7 @@
     /**
      * Bypasses a specified number of contiguous elements from the end of the sequence and returns the remaining elements.
      * @param count The number of elements to skip from the end of the sequence before returning the remaining elements.
-     * @return Sequence bypassing the specified number of elements counting from the end of the source sequence.
+     * @returns {Enumerable} Sequence bypassing the specified number of elements counting from the end of the source sequence.
      */
     EnumerablePrototype.skipLast = function (count) {
         var parent = this;
@@ -353,7 +357,7 @@
     /**
      * Repeats and concatenates the source sequence the given number of times.
      * @param count Number of times to repeat the source sequence.
-     * @return Sequence obtained by concatenating the source sequence to itself the specified number of times.
+     * @returns {Enumerable} Sequence obtained by concatenating the source sequence to itself the specified number of times.
      */
     EnumerablePrototype.repeat = function (count) {
         var parent = this;

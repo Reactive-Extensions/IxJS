@@ -1,11 +1,12 @@
 
     /**
-     * Returns a sequence that throws an exception upon enumeration.
-     * 
-     * @param exception Exception to throw upon enumerating the resulting sequence.
-     * @return Sequence that throws the specified exception upon enumeration.
+     * Returns a sequence that throws an exception upon enumeration.  An alias for this method is throwException for <IE9.
+     * @example
+     *  var result = Enumerable.throw(new Error('error'));
+     * @param {Object} exception Exception to throw upon enumerating the resulting sequence.
+     * @returns {Enumerable} Sequence that throws the specified exception upon enumeration.
      */
-    Enumerable.throwException = function (value) {
+    Enumerable['throw'] = Enumerable.throwException = function (value) {
         return new Enumerable(function () {
             return enumeratorCreate(
                 function () { throw value; },
@@ -15,9 +16,10 @@
 
     /**
      * Creates an enumerable sequence based on an enumerable factory function.
-     * 
-     * @param enumerableFactory Enumerable factory function.
-     * @return Sequence that will invoke the enumerable factory upon a call to GetEnumerator.
+     * @example
+     *  var result = Enumerable.defer(function () { return Enumerable.range(0, 10); });
+     * @param {Function} enumerableFactory Enumerable factory function.
+     * @returns {Enumerable} Sequence that will invoke the enumerable factory upon a call to GetEnumerator.
      */
     var enumerableDefer = Enumerable.defer = function (enumerableFactory) {
         return new Enumerable(function () {
@@ -35,12 +37,17 @@
 
     /**
      * Generates a sequence by mimicking a for loop.
-     * 
-     * @param initialState Initial state of the generator loop.
-     * @param condition Loop condition.
-     * @param iterate State update function to run after every iteration of the generator loop.
-     * @param resultSelector Result selector to compute resulting sequence elements.
-     * @return Sequence obtained by running the generator loop, yielding computed elements.
+     * @example
+     *  var result = Enumerable.generate(
+     *      0,
+     *      function (x) { return x < 10; },
+     *      function (x) { return x + 1; },
+     *      function (x) { return x * x });
+     * @param {Any} initialState Initial state of the generator loop.
+     * @param {Function} condition Loop condition.
+     * @param {Function} iterate State update function to run after every iteration of the generator loop.
+     * @param {Function} resultSelector Result selector to compute resulting sequence elements.
+     * @returns {Enumerable} Sequence obtained by running the generator loop, yielding computed elements.
      */
     Enumerable.generate = function (initialState, condition, iterate, resultSelector) {
         return new Enumerable(function () {
@@ -63,10 +70,11 @@
 
     /**
      * Generates a sequence that's dependent on a resource object whose lifetime is determined by the sequence usage duration.
-     * 
-     * @param resourceFactory Resource factory function.
-     * @param enumerableFactory Enumerable factory function, having access to the obtained resource.
-     * @return Sequence whose use controls the lifetime of the associated obtained resource.
+     * @example
+     *  var result = Enumerable.using(function () { return new QuerySource(); }, function (x) { return x.get(42); });
+     * @param {Function} resourceFactory Resource factory function.
+     * @param {Function} enumerableFactory Enumerable factory function, having access to the obtained resource.
+     * @returns {Enumerable} Sequence whose use controls the lifetime of the associated obtained resource.
      */
     Enumerable.using = function (resourceFactory, enumerableFactory) {
         return new Enumerable(function () {

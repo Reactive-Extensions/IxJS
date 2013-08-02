@@ -1,6 +1,6 @@
 {
   "name": "Ix",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": [
     "l2o.js",
     "ix.js"

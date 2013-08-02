@@ -54,7 +54,7 @@
          * @param {Any} seed The initial accumulator value.
          * @param {Function} func An accumulator function to be invoked on each element.
          * @resultSelector {Function} A function to transform the final accumulator value into the result value.
-         * @return {Any} The transformed final accumulator value.
+         * @returns {Any} The transformed final accumulator value.
          */
         EnumerablePrototype.aggregate = function(/* seed, func, resultSelector */) {
             var f = arguments.length === 1 ? aggregate1 : aggregate;
@@ -73,8 +73,8 @@
          *  currentValue The current element being processed in the sequence.
          *  index The index of the current element being processed in the sequence.
          *  sequence The sequence reduce was called upon.
-         * @param initialValue Object to use as the first argument to the first call of the callback.
-         * @return The transformed final accumulator value.
+         * @param {Any} initialValue Object to use as the first argument to the first call of the callback.
+         * @returns {Any} The transformed final accumulator value.
          */
         EnumerablePrototype.reduce = function (/*func, seed */) {
             return arguments.length === 2 ? 
@@ -89,7 +89,7 @@
          * sequence.all(function (item, index, seq) { return item % 2 === 0; });
          *
          * @param {Function} predicate A function to test each element for a condition.
-         * @return {Boolean} true if every element of the source sequence passes the test in the specified predicate, or if the sequence is empty; otherwise, false.
+         * @returns {Boolean} true if every element of the source sequence passes the test in the specified predicate, or if the sequence is empty; otherwise, false.
          */
         EnumerablePrototype.all = EnumerablePrototype.every = function (predicate, thisArg) {
             var e = this.getEnumerator(), i = 0;
@@ -117,7 +117,7 @@
          * sequence.any();
          *
          * @param {Function} [predicate] An optional function to test each element for a condition.
-         * @return {Boolean} true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.
+         * @returns {Boolean} true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.
          */
         EnumerablePrototype.any = function(predicate, thisArg) {
             var e = this.getEnumerator(), i = 0;
@@ -141,7 +141,7 @@
          * Computes the average of a sequence of values that are obtained by invoking a transform function on each element of the input sequence.
          *
          * @param {Function} [selector] An optional transform function to apply to each element.
-         * @return {Number} The average of the sequence of values.
+         * @returns {Number} The average of the sequence of values.
          */
         EnumerablePrototype.average = function(selector) {
             if (selector) {
@@ -167,7 +167,7 @@
         /** 
          * Concatenates two sequences.
          * 
-         * @return {Enumerable} An Enumerable that contains the concatenated elements of the two input sequences.
+         * @returns {Enumerable} An Enumerable that contains the concatenated elements of the two input sequences.
          */
         EnumerablePrototype.concat = function () {
             var args = slice.call(arguments, 0);
@@ -283,8 +283,9 @@
         
         /**
          * Returns distinct elements from a sequence by using an optional comparer function to compare values.
-         *
-         * 
+         * @example
+         *  var result = Enumerable.fromArray([1,2,1,2,1,2]);
+         *  var result = Enumerable.fromArray([1,2,1,2,1,2], function (x, y) { return x === y; });
          * @param {Function} [comparer] a comparer function to compare the values.
          * @returns {Enumerable} An Enumerable that contains distinct elements from the source sequence.
          */
@@ -1436,11 +1437,13 @@
 
     /**
      * Returns a sequence with a single element.
-     * 
+     * An alias for this method is returnValue for browsers <IE9.
+     * @example
+     *  var result = Enumerable.return(42);
      * @param {Any} value Single element of the resulting sequence.
      * @returns {Enumerable} Sequence with a single element.
      */
-    var enumerableReturn = Enumerable.returnValue = function (value) {
+    var enumerableReturn = Enumerable['return'] = Enumerable.returnValue = function (value) {
         return new Enumerable(function () {
             var done = false;
             return enumeratorCreate(
@@ -1456,14 +1459,6 @@
             );
         });
     };
-
-    /**
-     * Returns a sequence with a single element.
-     * 
-     * @param {Any} value Single element of the resulting sequence.
-     * @returns {Enumerable} Sequence with a single element.
-     */
-    Enumerable['return'] = enumerableReturn;
 
     /** 
      * Generates a sequence of integral numbers within a specified range.

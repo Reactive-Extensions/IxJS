@@ -40,10 +40,11 @@
 
     /**
      * Creates a sequence that returns the elements of the first sequence, switching to the second in case of an error.
+     * An alias for this method is catchException for browsers <IE9.
      * @param second Second sequence, concatenated to the result in case the first sequence completes exceptionally or handler to invoke when an exception of the specified type occurs.
-     * @return The first sequence, followed by the second sequence in case an error is produced.
+     * @returns {Enumerable} The first sequence, followed by the second sequence in case an error is produced.
      */
-    EnumerablePrototype.catchException = function (secondOrHandler) {
+    EnumerablePrototype['catch'] = EnumerablePrototype.catchException = function (secondOrHandler) {
         if (arguments.length === 0) {
             return enumerableCatch(this); // Already IE<IE<T>>
         } else if (typeof secondOrHandler === 'function') {
@@ -57,9 +58,10 @@
 
     /**
      * Creates a sequence by concatenating source sequences until a source sequence completes successfully.
-     * @return Sequence that continues to concatenate source sequences while errors occur.
+     * An alias for this method is catchException for browsers <IE9.
+     * @returns {Enumerable} Sequence that continues to concatenate source sequences while errors occur.
      */
-    var enumerableCatch = Enumerable.catchException = function () {
+    var enumerableCatch = Enumerable['catch'] = Enumerable.catchException = function () {
         // Check arguments
         var sources = Enumerable.fromArray(arguments);
         return new Enumerable(function () {
@@ -120,10 +122,13 @@
 
     /**
      * Creates a sequence whose termination or disposal of an enumerator causes a finally action to be executed.
-     * @param finallyAction Action to run upon termination of the sequence, or when an enumerator is disposed.
-     * @return Source sequence with guarantees on the invocation of the finally action.
+     * An alias for this method is finallyDo for browsers <IE9.
+     * @example
+     *  var result = Enumerable.range(1, 10).finally(function () { console.log('done!'); });
+     * @param {Function} finallyAction Action to run upon termination of the sequence, or when an enumerator is disposed.
+     * @returns {Enumerable} Source sequence with guarantees on the invocation of the finally action.
      */
-    EnumerablePrototype.finallyDo = function (finallyAction) {
+    EnumerablePrototype['finally'] = EnumerablePrototype.finallyDo = function (finallyAction) {
         var parent = this;
         return new Enumerable(function () {
             var e, finallyCalled = false;
@@ -157,8 +162,8 @@
 
     /**
      * Creates a sequence that concatenates both given sequences, regardless of whether an error occurs.
-     * @param second Second sequence.
-     * @return Sequence concatenating the elements of both sequences, ignoring errors.
+     * @param {Enumerable} second Second sequence.
+     * @returns {Enumerable} Sequence concatenating the elements of both sequences, ignoring errors.
      */
     EnumerablePrototype.onErrorResumeNext = function (second) {
         return onErrorResumeNext.apply(null, [this, second]);
@@ -166,7 +171,7 @@
 
     /**
      * Creates a sequence that concatenates the given sequences, regardless of whether an error occurs in any of the sequences.
-     * @return Sequence concatenating the elements of the given sequences, ignoring errors.
+     * @returns {Enumerable} Sequence concatenating the elements of the given sequences, ignoring errors.
      */
     var onErrorResumeNext = Enumerable.onErrorResumeNext = function () {
         var sources = arguments;
@@ -196,8 +201,8 @@
 
     /**
      * Creates a sequence that retries enumerating the source sequence as long as an error occurs, with the specified maximum number of retries.
-     * @param retryCount Maximum number of retries.
-     * @return Sequence concatenating the results of the source sequence as long as an error occurs.
+     * @param {Number} retryCount Maximum number of retries.
+     * @returns {Enumerable} Sequence concatenating the results of the source sequence as long as an error occurs.
      */
     EnumerablePrototype.retry = function (retryCount) {
         var parent = this;
