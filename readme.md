@@ -26,7 +26,7 @@ Getting started is easy.  For example, we could generate data, filter it and the
 
 Note the execution of the query doesn't take place until forEach is called.
 
-This project has moved to [CodePlex](http://rx.codeplex.com/) and only serves as a mirror.
+This project is a mirror of the [CodePlex](http://rx.codeplex.com/) repository.
 
 ## About the Interactive Extensions Extensions ##
 
@@ -37,7 +37,7 @@ This set of libraries include:
 
 ##  API Documentation ##
 
-- [Ix.Enumerable class](https://github.com/Reactive-Extensions/IxJS/wiki/Enumerable)
+You can find the documentation [here](https://github.com/Reactive-Extensions/IxJS/tree/master/doc) as well as examples [here](https://github.com/Reactive-Extensions/IxJS/tree/master/examples).
 
 ## Installation and Usage ##
 

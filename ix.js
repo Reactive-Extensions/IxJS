@@ -466,12 +466,13 @@
     
 
     /**
-     * Returns a sequence that throws an exception upon enumeration.
-     * 
-     * @param exception Exception to throw upon enumerating the resulting sequence.
-     * @return Sequence that throws the specified exception upon enumeration.
+     * Returns a sequence that throws an exception upon enumeration.  An alias for this method is throwException for <IE9.
+     * @example
+     *  var result = Enumerable.throw(new Error('error'));
+     * @param {Object} exception Exception to throw upon enumerating the resulting sequence.
+     * @returns {Enumerable} Sequence that throws the specified exception upon enumeration.
      */
-    Enumerable.throwException = function (value) {
+    Enumerable['throw'] = Enumerable.throwException = function (value) {
         return new Enumerable(function () {
             return enumeratorCreate(
                 function () { throw value; },
@@ -481,9 +482,10 @@
 
     /**
      * Creates an enumerable sequence based on an enumerable factory function.
-     * 
-     * @param enumerableFactory Enumerable factory function.
-     * @return Sequence that will invoke the enumerable factory upon a call to GetEnumerator.
+     * @example
+     *  var result = Enumerable.defer(function () { return Enumerable.range(0, 10); });
+     * @param {Function} enumerableFactory Enumerable factory function.
+     * @returns {Enumerable} Sequence that will invoke the enumerable factory upon a call to GetEnumerator.
      */
     var enumerableDefer = Enumerable.defer = function (enumerableFactory) {
         return new Enumerable(function () {
@@ -501,12 +503,17 @@
 
     /**
      * Generates a sequence by mimicking a for loop.
-     * 
-     * @param initialState Initial state of the generator loop.
-     * @param condition Loop condition.
-     * @param iterate State update function to run after every iteration of the generator loop.
-     * @param resultSelector Result selector to compute resulting sequence elements.
-     * @return Sequence obtained by running the generator loop, yielding computed elements.
+     * @example
+     *  var result = Enumerable.generate(
+     *      0,
+     *      function (x) { return x < 10; },
+     *      function (x) { return x + 1; },
+     *      function (x) { return x * x });
+     * @param {Any} initialState Initial state of the generator loop.
+     * @param {Function} condition Loop condition.
+     * @param {Function} iterate State update function to run after every iteration of the generator loop.
+     * @param {Function} resultSelector Result selector to compute resulting sequence elements.
+     * @returns {Enumerable} Sequence obtained by running the generator loop, yielding computed elements.
      */
     Enumerable.generate = function (initialState, condition, iterate, resultSelector) {
         return new Enumerable(function () {
@@ -529,10 +536,11 @@
 
     /**
      * Generates a sequence that's dependent on a resource object whose lifetime is determined by the sequence usage duration.
-     * 
-     * @param resourceFactory Resource factory function.
-     * @param enumerableFactory Enumerable factory function, having access to the obtained resource.
-     * @return Sequence whose use controls the lifetime of the associated obtained resource.
+     * @example
+     *  var result = Enumerable.using(function () { return new QuerySource(); }, function (x) { return x.get(42); });
+     * @param {Function} resourceFactory Resource factory function.
+     * @param {Function} enumerableFactory Enumerable factory function, having access to the obtained resource.
+     * @returns {Enumerable} Sequence whose use controls the lifetime of the associated obtained resource.
      */
     Enumerable.using = function (resourceFactory, enumerableFactory) {
         return new Enumerable(function () {
@@ -566,18 +574,19 @@
 
     /**
      * Lazily invokes an action for each value in the sequence, and executes an action upon successful or exceptional termination.
-     * 
-     * e.doAction(onNext);
-     * e.doAction(onNext, onError);
-     * e.doAction(onNExt, onError, onCompleted);
-     * e.doAction(observer);
+     * There is an alias for this method doAction for browsers <IE9.
+     * @example
+     * e.do(onNext);
+     * e.do(onNext, onError);
+     * e.do(onNExt, onError, onCompleted);
+     * e.do(observer);
 
      * @param onNext Action to invoke for each element or Observer.
      * @param onError Action to invoke on exceptional termination of the sequence.
      * @param onCompleted Action to invoke on successful termination of the sequence.
-     * @return Sequence exhibiting the specified side-effects upon enumeration.
+     * @returns {Enumerable} Sequence exhibiting the specified side-effects upon enumeration.
      */
-    EnumerablePrototype.doAction = function (onNext, onError, onCompleted) {
+    EnumerablePrototype['do'] = EnumerablePrototype.doAction = function (onNext, onError, onCompleted) {
         var oN, oE, oC, self = this;
         if (typeof onNext === 'object') {
             oN = functionBind(onNext.onNext, onNext);
@@ -614,9 +623,12 @@
     
     /**
      * Generates a sequence of buffers over the source sequence, with specified length and possible overlap.
-     * @param count Number of elements for allocated buffers.
-     * @param skip Number of elements to skip between the start of consecutive buffers.
-     * @return Sequence of buffers containing source sequence elements.
+     * @example
+     *  var result = Enumerable.range(0, 10).bufferWithCount(2);
+     *  var result = Enumerable.range(0, 10).bufferWithCount(5, 1);
+     * @param {Number} count Number of elements for allocated buffers.
+     * @param {Number} [skip] Number of elements to skip between the start of consecutive buffers.
+     * @returns {Enumerable} Sequence of buffers containing source sequence elements.
      */
     EnumerablePrototype.bufferWithCount = function (count, skip) {
         var parent = this;
@@ -659,7 +671,7 @@
 
     /**
      * Ignores all elements in the source sequence.
-     * @return Source sequence without its elements.
+     * @returns {Enumerable} Source sequence without its elements.
      */
     EnumerablePrototype.ignoreElements = function() {
         var parent = this;
@@ -683,7 +695,7 @@
      * Returns elements with a distinct key value by using the specified equality comparer to compare key values.
      * @param keySelector Key selector.
      * @param comparer Comparer used to compare key values.
-     * @return Sequence that contains the elements from the source sequence with distinct key values.
+     * @returns {Enumerable} Sequence that contains the elements from the source sequence with distinct key values.
      */
     EnumerablePrototype.distinctBy = function(keySelector, comparer) {
         comparer || (comparer = defaultEqualityComparer);
@@ -713,7 +725,7 @@
      * Returns consecutive distinct elements based on a key value by using the specified equality comparer to compare key values.
      * @param keySelector Key selector.
      * @param comparer Comparer used to compare key values.
-     * @return Sequence without adjacent non-distinct elements.
+     * @returns {Enumerable} Sequence without adjacent non-distinct elements.
      */
     EnumerablePrototype.distinctUntilChanged = function (keySelector, comparer) {
         keySelector || (keySelector = identity);
@@ -750,7 +762,7 @@
     /**
      * Expands the sequence by recursively applying a selector function.
      * @param selector Selector function to retrieve the next sequence to expand.
-     * @return Sequence with results from the recursive expansion of the source sequence.
+     * @returns {Enumerable} Sequence with results from the recursive expansion of the source sequence.
      */
     EnumerablePrototype.expand = function(selector) {
         var parent = this;
@@ -782,7 +794,7 @@
     /**
      * Returns the source sequence prefixed with the specified value.
      * @param values Values to prefix the sequence with.
-     * @return Sequence starting with the specified prefix value, followed by the source sequence.
+     * @returns {Enumerable} Sequence starting with the specified prefix value, followed by the source sequence.
      */
     EnumerablePrototype.startWith = function () {
         return enumerableConcat(enumerableFromArray(slice.call(arguments)), this);
@@ -841,7 +853,7 @@
      * Generates a sequence of accumulated values by scanning the source sequence and applying an accumulator function.
      * @param seed Accumulator seed value.
      * @param accumulator Accumulation function to apply to the current accumulation value and each element of the sequence.
-     * @return Sequence with all intermediate accumulation values resulting from scanning the sequence.
+     * @returns {Enumerable} Sequence with all intermediate accumulation values resulting from scanning the sequence.
      */
     EnumerablePrototype.scan = function (/* seed, accumulator */) {
         var f = arguments.length === 1 ? scan1 : scan;
@@ -851,7 +863,7 @@
     /**
      * Returns a specified number of contiguous elements from the end of the sequence.
      * @param count The number of elements to take from the end of the sequence.
-     * @return Sequence with the specified number of elements counting from the end of the source sequence.
+     * @returns {Enumerable} Sequence with the specified number of elements counting from the end of the source sequence.
      */
     EnumerablePrototype.takeLast = function (count) {
         var parent = this;
@@ -884,7 +896,7 @@
     /**
      * Bypasses a specified number of contiguous elements from the end of the sequence and returns the remaining elements.
      * @param count The number of elements to skip from the end of the sequence before returning the remaining elements.
-     * @return Sequence bypassing the specified number of elements counting from the end of the source sequence.
+     * @returns {Enumerable} Sequence bypassing the specified number of elements counting from the end of the source sequence.
      */
     EnumerablePrototype.skipLast = function (count) {
         var parent = this;
@@ -913,7 +925,7 @@
     /**
      * Repeats and concatenates the source sequence the given number of times.
      * @param count Number of times to repeat the source sequence.
-     * @return Sequence obtained by concatenating the source sequence to itself the specified number of times.
+     * @returns {Enumerable} Sequence obtained by concatenating the source sequence to itself the specified number of times.
      */
     EnumerablePrototype.repeat = function (count) {
         var parent = this;
@@ -962,10 +974,11 @@
 
     /**
      * Creates a sequence that returns the elements of the first sequence, switching to the second in case of an error.
+     * An alias for this method is catchException for browsers <IE9.
      * @param second Second sequence, concatenated to the result in case the first sequence completes exceptionally or handler to invoke when an exception of the specified type occurs.
-     * @return The first sequence, followed by the second sequence in case an error is produced.
+     * @returns {Enumerable} The first sequence, followed by the second sequence in case an error is produced.
      */
-    EnumerablePrototype.catchException = function (secondOrHandler) {
+    EnumerablePrototype['catch'] = EnumerablePrototype.catchException = function (secondOrHandler) {
         if (arguments.length === 0) {
             return enumerableCatch(this); // Already IE<IE<T>>
         } else if (typeof secondOrHandler === 'function') {
@@ -979,9 +992,10 @@
 
     /**
      * Creates a sequence by concatenating source sequences until a source sequence completes successfully.
-     * @return Sequence that continues to concatenate source sequences while errors occur.
+     * An alias for this method is catchException for browsers <IE9.
+     * @returns {Enumerable} Sequence that continues to concatenate source sequences while errors occur.
      */
-    var enumerableCatch = Enumerable.catchException = function () {
+    var enumerableCatch = Enumerable['catch'] = Enumerable.catchException = function () {
         // Check arguments
         var sources = Enumerable.fromArray(arguments);
         return new Enumerable(function () {
@@ -1042,10 +1056,13 @@
 
     /**
      * Creates a sequence whose termination or disposal of an enumerator causes a finally action to be executed.
-     * @param finallyAction Action to run upon termination of the sequence, or when an enumerator is disposed.
-     * @return Source sequence with guarantees on the invocation of the finally action.
+     * An alias for this method is finallyDo for browsers <IE9.
+     * @example
+     *  var result = Enumerable.range(1, 10).finally(function () { console.log('done!'); });
+     * @param {Function} finallyAction Action to run upon termination of the sequence, or when an enumerator is disposed.
+     * @returns {Enumerable} Source sequence with guarantees on the invocation of the finally action.
      */
-    EnumerablePrototype.finallyDo = function (finallyAction) {
+    EnumerablePrototype['finally'] = EnumerablePrototype.finallyDo = function (finallyAction) {
         var parent = this;
         return new Enumerable(function () {
             var e, finallyCalled = false;
@@ -1079,8 +1096,8 @@
 
     /**
      * Creates a sequence that concatenates both given sequences, regardless of whether an error occurs.
-     * @param second Second sequence.
-     * @return Sequence concatenating the elements of both sequences, ignoring errors.
+     * @param {Enumerable} second Second sequence.
+     * @returns {Enumerable} Sequence concatenating the elements of both sequences, ignoring errors.
      */
     EnumerablePrototype.onErrorResumeNext = function (second) {
         return onErrorResumeNext.apply(null, [this, second]);
@@ -1088,7 +1105,7 @@
 
     /**
      * Creates a sequence that concatenates the given sequences, regardless of whether an error occurs in any of the sequences.
-     * @return Sequence concatenating the elements of the given sequences, ignoring errors.
+     * @returns {Enumerable} Sequence concatenating the elements of the given sequences, ignoring errors.
      */
     var onErrorResumeNext = Enumerable.onErrorResumeNext = function () {
         var sources = arguments;
@@ -1118,8 +1135,8 @@
 
     /**
      * Creates a sequence that retries enumerating the source sequence as long as an error occurs, with the specified maximum number of retries.
-     * @param retryCount Maximum number of retries.
-     * @return Sequence concatenating the results of the source sequence as long as an error occurs.
+     * @param {Number} retryCount Maximum number of retries.
+     * @returns {Enumerable} Sequence concatenating the results of the source sequence as long as an error occurs.
      */
     EnumerablePrototype.retry = function (retryCount) {
         var parent = this;
@@ -1154,31 +1171,40 @@
     };
     /**
      * Generates an enumerable sequence by repeating a source sequence as long as the given loop condition holds.
-     * @param condition Loop condition.
-     * @param source Sequence to repeat while the condition evaluates true.
-     * @return Sequence generated by repeating the given sequence while the condition evaluates to true.
+     * An alias for this method is whileDo for browsers <IE9.
+     * @example
+     *  var result = Enumerable.while(function () { return true; }, Enumerable.range(1, 10));
+     * @param {Function} condition Loop condition.
+     * @param {Enumerable} source Sequence to repeat while the condition evaluates true.
+     * @returns {Enumerable} Sequence generated by repeating the given sequence while the condition evaluates to true.
      */    
-    var enumerableWhileDo = Enumerable.whileDo = function (condition, source) {
+    var enumerableWhileDo = Enumerable['while'] = Enumerable.whileDo = function (condition, source) {
         return enumerableRepeat(source).takeWhile(condition).selectMany(identity);
     };
 
     /**
      * Returns an enumerable sequence based on the evaluation result of the given condition.
-     * @param condition Condition to evaluate.
-     * @param thenSource Sequence to return in case the condition evaluates true.
-     * @param elseSource Sequence to return in case the condition evaluates false.
+     * An alias for this method is ifThen for browsers <IE9
+     * @example
+     *  var result = Enumerable.if(function () { return true; }, Enumerable.range(0, 10));
+     *  var result = Enumerable.if(function () { return false; }, Enumerable.range(0, 10), Enumerable.return(42));
+     * @param {Function} condition Condition to evaluate.
+     * @param {Enumerable} thenSource Sequence to return in case the condition evaluates true.
+     * @param {Enumerable} [elseSource] Optional sequence to return in case the condition evaluates false; else an empty sequence.
      * @return Either of the two input sequences based on the result of evaluating the condition.
      */
-    Enumerable.ifThen = function (condition, thenSource, elseSource) {
+    Enumerable['if'] = Enumerable.ifThen = function (condition, thenSource, elseSource) {
         elseSource || (elseSource = enumerableEmpty());
         return enumerableDefer(function () { return condition() ? thenSource : elseSource; });
     };
 
     /**
      * Generates an enumerable sequence by repeating a source sequence as long as the given loop postcondition holds.
-     * @param source Source sequence to repeat while the condition evaluates true.
-     * @param condition Loop condition.
-     * @return Sequence generated by repeating the given sequence until the condition evaluates to false.
+     * @example
+     *  var result = Enumerable.doWhile(Enumerable.range(0, 10), function () { return true; });
+     * @param {Enumerable} source Source sequence to repeat while the condition evaluates true.
+     * @param {Function} condition Loop condition.
+     * @returns {Enumerable} Sequence generated by repeating the given sequence until the condition evaluates to false.
      */
     Enumerable.doWhile = function (source, condition) {
         return source.concat(enumerableWhileDo(condition, source));
@@ -1186,12 +1212,16 @@
 
     /**
      * Returns a sequence from a dictionary based on the result of evaluating a selector function, also specifying a default sequence.
-     * @param selector Selector function used to pick a sequence from the given sources.
-     * @param sources Dictionary mapping selector values onto resulting sequences.
-     * @param defaultSource Default sequence to return in case there's no corresponding source for the computed selector value.
-     * @return The source sequence corresponding with the evaluated selector value; otherwise, the default source.
+     * An alias for this method is switchCase for browsers <IE9.
+     * @example
+     *  var result = Enumerable.case(function (x) { return x; }, {1: 42, 2: 25});
+     *  var result = Enumerable.case(function (x) { return x; }, {1: 42, 2: 25}, Enumerable.return(56));
+     * @param {Function} selector Selector function used to pick a sequence from the given sources.
+     * @param {Object} sources Dictionary mapping selector values onto resulting sequences.
+     * @param {Enumerable} [defaultSource] Default sequence to return in case there's no corresponding source for the computed selector value; if not provided defaults to empty Enumerable.
+     * @returns {Enumerable} The source sequence corresponding with the evaluated selector value; otherwise, the default source.
      */
-    Enumerable.cases = function (selector, sources, defaultSource) {
+    Enumerable['case'] = Enumerable.switchCase = function (selector, sources, defaultSource) {
         defaultSource || (defaultSource = enumerableEmpty());
         return enumerableDefer(function () {
             var result = sources[selector()]
@@ -1204,11 +1234,14 @@
 
     /**
      * Generates a sequence by enumerating a source sequence, mapping its elements on result sequences, and concatenating those sequences.
-     * @param source Source sequence.
-     * @param resultSelector Result selector to evaluate for each iteration over the source.
-     * @return Sequence concatenating the inner sequences that result from evaluating the result selector on elements from the source.
+     * An alias for this method is forIn for browsers <IE9.
+     * @example
+     *  var result = Enumerable.for(Enumerable.range(0, 10), function (x) { return Enumerable.return(x); });
+     * @param {Enumerable} source Source sequence.
+     * @param {Function} resultSelector Result selector to evaluate for each iteration over the source.
+     * @return {Enumerable} Sequence concatenating the inner sequences that result from evaluating the result selector on elements from the source.
      */
-    Enumerable.forIn = function (source, resultSelector) {
+    Enumerable['for'] = Enumerable.forIn = function (source, resultSelector) {
         return source.select(resultSelector);
     };
 

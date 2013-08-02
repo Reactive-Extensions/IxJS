@@ -85,7 +85,7 @@ and limitations under the License.
     test('Case1', function () {
         var x = 1;
         var d = 'd';
-        var res = Enumerable.cases(function () { return x; }, {
+        var res = Enumerable.switchCase(function () { return x; }, {
             0: Enumerable.returnValue('a'),
             1: Enumerable.returnValue('b'),
             2: Enumerable.returnValue('c'),
@@ -114,7 +114,7 @@ and limitations under the License.
     test('Case2', function () {
         var x = 1;
         var d = 'd';
-        var res = Enumerable.cases(function () { return x; }, 
+        var res = Enumerable.switchCase(function () { return x; }, 
         {
             0: Enumerable.returnValue('a'),
             1: Enumerable.returnValue('b'),
