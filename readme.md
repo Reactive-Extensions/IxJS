@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Reactive-Extensions/IxJS.png)](https://travis-ci.org/Reactive-Extensions/IxJS)
+
 # The Interactive Extensions for JavaScript... #
 *...is a set of libraries to compose pull-based collections and LINQ-style query operators in JavaScript*
 
