@@ -36,5 +36,8 @@
     "LINQ",
     "Collections"
   ],
-  "main": "ix.node.js"
+  "main": "ix.node.js",
+  "scripts": {
+    "test": "grunt"
+  }  
 }
