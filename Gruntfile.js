@@ -25,7 +25,7 @@ module.exports = function (grunt) {
                     'src/core/intro.js',
                     'src/core/basicheader.js',
                     'src/core/internal/inherits.js',
-                    'src/core/internal/deepequals.js',
+                    'src/core/internal/deepEquals.js',
                     'src/core/internal/dictionary.js',
                     'src/core/internal/lookup.js',
                     'src/core/enumerator.js',
