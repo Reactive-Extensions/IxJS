@@ -17,7 +17,7 @@
     }
 }(this, function (global, exp, root, undefined) {
     
-    var isEqual = Ix.Internals.isEqual;
+    var isEqual = root.Internals.isEqual;
     function noop () { }
     function identity (x) { return x; }
     function defaultComparer (x, y) { return x > y ? 1 : x < y ? -1 : 0; }
