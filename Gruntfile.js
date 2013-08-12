@@ -40,12 +40,12 @@ module.exports = function (grunt) {
                     'src/core/license.js',
                     'src/core/subintro.js',
                     'src/core/ixheader.js',
-                    'src/core/interactive/aggregates.js',
-                    'src/core/interactive/buffering.js',
-                    'src/core/interactive/creation.js',
-                    'src/core/interactive/single.js',
-                    'src/core/interactive/exception.js',
-                    'src/core/interactive/imperative.js',
+                    'src/core/Interactive/aggregates.js',
+                    'src/core/Interactive/buffering.js',
+                    'src/core/Interactive/creation.js',
+                    'src/core/Interactive/single.js',
+                    'src/core/Interactive/exception.js',
+                    'src/core/Interactive/imperative.js',
                     'src/core/suboutro.js'
                 ],
                 dest: 'ix.js'
