@@ -43,23 +43,39 @@ You can find the documentation [here](https://github.com/Reactive-Extensions/IxJ
 
 ## Installation and Usage ##
 
-There are multiple ways of getting started with the Interactive Extensions including:
+There are multiple ways of getting started with the Interactive Extensions.  The files are available on [cdnjs](http://cdnjs.com/) and [jsDelivr](http://www.jsdelivr.com/#!ixjs).
 
-In a Browser:
+### In a Browser:
 
     <script src="l2o.js"></script>
     <script src="ix.js"></script>
 
-Installing via NPM:
+### Installing with [Bower](http://bower.io/)
+
+	bower install ix
+
+### Installing with [Jam](http://jamjs.org/)
+	
+	jam install ix
+
+### Installing via [NPM](https://npmjs.org/):
 
     npm install ix
     npm install -g ix
 
-Using in Node.js:
+### Using in Node.js:
 
     var Ix = require('ix');
 
-Using RxJS with an AMD loader such as Require.js
+    var source = Ix.Enumerable.fromArray([1,2,3]);
+
+    source.forEach(function (x) {
+    	console.log('Next: ' + x);	
+	});
+
+	// => 1, 2, 3
+
+### Using RxJS with an AMD loader such as Require.js
 
     require({
         'paths': {
