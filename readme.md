@@ -73,7 +73,9 @@ There are multiple ways of getting started with the Interactive Extensions.  The
     	console.log('Next: ' + x);	
 	});
 
-	// => 1, 2, 3
+	// => Next 1 
+	// => Next 2 
+	// => Next 3
 
 ### Using RxJS with an AMD loader such as Require.js
 
@@ -84,8 +86,12 @@ There are multiple ways of getting started with the Interactive Extensions.  The
     },
     ['ix'], function(Ix) {
         var obs = Ix.Enumerable.returnValue(42);
-        obs.subscribe(function (x) { console.log(x); });
+        obs.forEach(function (x) { 
+        	console.log('Next: ' + x); 
+    	});
     });
+
+	// => Next 42 
 
 ## Compatibility ##
 
