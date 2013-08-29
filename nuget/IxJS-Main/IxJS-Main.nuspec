@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>IxJS-Main</id>
+    <title>Interactive Extensions for JavaScript - Main</title>
+    <version>1.0.6.0</version>
+    <authors>Microsoft Corporation</authors>
+    <description>Interactive Extensions for JavaScript library with additional operators.</description>
+    <projectUrl>http://rx.codeplex.com</projectUrl>
+    <iconUrl>http://go.microsoft.com/fwlink/?LinkId=261274</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+    <language>en-US</language>
+    <tags>Ix IxJS Interactive Extensions Enumerable LINQ</tags>
+    <dependencies>
+      <dependency id="IxJS-L2O" version="1.0.6.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\..\ix.js" target="content\Scripts\ix.js" />
+    <file src="..\..\ix.min.js" target="content\Scripts\ix.min.js" />
+  </files>
+</package>

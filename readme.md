@@ -7,25 +7,30 @@ The Interactive Extensions for JavaScript (IxJS) is an implementation of Languag
 
 We provide two files, a core implementation of LINQ to Objects in l2o.js and the Interactive Extensions in ix.js.  The Interactive Extensions is a set of functions that were found to be useful for the Reactive Extensions (Rx) and were ported from the push model of Rx to a pull model.
 
-Getting started is easy.  For example, we could generate data, filter it and then display the results:
+Getting started is easy.  Just reference the IxJS files:
 
-	// Generate the data
-	var data = Ix.Enumerable.range(0, 10);
+	<script src="l2o.js"></script>
+	<script src="ix.js"></script>
 
-	// Query the data
-	var query = data
-		.map( function (x) {
-			return x * x;
-		})
-		.filter( function (x) {
-			return x % 3 === 0;
-		});
+Next, we could generate data, filter it and then display the results
+```js
+// Generate the data
+var data = Ix.Enumerable.range(0, 10);
 
-	// Now execute the query
-	query.forEach( function (x, idx) {
-		console.log(x, idx);
+// Query the data
+var query = data
+	.map( function (x) {
+		return x * x;
+	})
+	.filter( function (x) {
+		return x % 3 === 0;
 	});
 
+// Now execute the query
+query.forEach( function (x, idx) {
+	console.log(x, idx);
+});
+```
 Note the execution of the query doesn't take place until forEach is called.
 
 This project is a mirror of the [CodePlex](http://rx.codeplex.com/) repository.
@@ -64,35 +69,44 @@ There are multiple ways of getting started with the Interactive Extensions.  The
     npm install -g ix
 
 ### Using in Node.js:
+```js
+var Ix = require('ix');
 
-    var Ix = require('ix');
+var source = Ix.Enumerable.fromArray([1,2,3]);
 
-    var source = Ix.Enumerable.fromArray([1,2,3]);
+source.forEach(function (x) {
+	console.log('Next: ' + x);	
+});
 
-    source.forEach(function (x) {
-    	console.log('Next: ' + x);	
+// => Next 1 
+// => Next 2 
+// => Next 3
+```
+Installing all of IxJS via [NuGet](http://nuget.org/):
+
+    Install-Package IxJS-All
+
+Or install via [NuGet](http://nuget.org/) individual packages:
+
+    Install-Package IxJS-L2O
+    Install-Package IxJS-Main
+
+### Using IxJS with an AMD loader such as Require.js
+```js
+require({
+    'paths': {
+        'ix': 'path/to/ix.js'
+    }
+},
+['ix'], function(Ix) {
+    var obs = Ix.Enumerable.returnValue(42);
+    obs.forEach(function (x) { 
+    	console.log('Next: ' + x); 
 	});
+});
 
-	// => Next 1 
-	// => Next 2 
-	// => Next 3
-
-### Using RxJS with an AMD loader such as Require.js
-
-    require({
-        'paths': {
-            'ix': 'path/to/ix.js'
-        }
-    },
-    ['ix'], function(Ix) {
-        var obs = Ix.Enumerable.returnValue(42);
-        obs.forEach(function (x) { 
-        	console.log('Next: ' + x); 
-    	});
-    });
-
-	// => Next 42 
-
+// => Next 42 
+```
 ## Compatibility ##
 
 IxJS has been thoroughly tested against all major browsers and supports IE6+, Chrome 4+, FireFox 1+, and Node.js v0.4+. 

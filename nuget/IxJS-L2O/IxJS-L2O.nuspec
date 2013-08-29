@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>IxJS-L2O</id>
+    <title>Interactive Extensions for JavaScript - LINQ to Objects</title>
+    <!-- Automatically updated by build, keeping fixed dev build number here in case of local build -->
+    <version>1.0.6.0</version>
+    <authors>Microsoft Corporation</authors>
+    <description>Interactive Extensions for JavaScript library which covers the basic LINQ to Objects operations.</description>
+    <projectUrl>http://rx.codeplex.com</projectUrl>
+    <iconUrl>http://go.microsoft.com/fwlink/?LinkId=261274</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+    <language>en-US</language>
+    <tags>Ix IxJS Interactive Extensions Enumerable LINQ</tags>
+  </metadata>
+  <files>
+    <file src="..\..\l2o.js" target="content\Scripts\l2o.js" />
+    <file src="..\..\l2o.min.js" target="content\Scripts\l2o.min.js" />
+  </files>
+</package>
