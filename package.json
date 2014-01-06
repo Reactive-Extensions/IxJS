@@ -3,7 +3,7 @@
   "title": "Interactive Extensions for JavaScript (IxJS)",
   "description": "Library for composing asynchronous and event-based operations in JavaScript",
   "version": "1.0.6",
-  "homepage": "http://rx.codeplex.com",
+  "homepage": "https://github.com/Reactive-Extensions/IxJS",
   "author": {
     "name": "MS Open Tech",
     "url": "https://github.com/Reactive-Extensions/IxJS/blob/master/authors.txt"
@@ -24,17 +24,22 @@
   "dependencies": {},
   "devDependencies": {
     "grunt-cli": "*",
-    "grunt": "~0.4.1",
+    "grunt": "~0.4.2",
     "grunt-contrib-jshint": "*",
+    "grunt-contrib-connect": "*",    
     "grunt-contrib-uglify": "*",
     "grunt-contrib-concat": "*",
     "grunt-contrib-qunit": "*",
-    "grunt-contrib-watch": "*"
+    "grunt-contrib-watch": "*",
+    "grunt-saucelabs": "*",
+    "grunt-conventional-changelog": "~1.0.0",
+    "load-grunt-tasks": "~0.2.0"   
   },
   "keywords": [
     "Enumerable",
     "LINQ",
-    "Collections"
+    "Collections",
+    "Array"
   ],
   "main": "ix.node.js",
   "scripts": {
