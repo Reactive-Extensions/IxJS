@@ -57,7 +57,7 @@ There are multiple ways of getting started with the Interactive Extensions.  The
 
 ### Installing with [Bower](http://bower.io/)
 
-	bower install ix
+	bower install Ix
 
 ### Installing with [Jam](http://jamjs.org/)
 	
