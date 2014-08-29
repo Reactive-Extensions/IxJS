@@ -1,11 +1,14 @@
-    // Headers
-    function noop () { }
-    function identity (x) { return x; }
-    function defaultComparer (x, y) { return x > y ? 1 : x < y ? -1 : 0; }
-    function defaultEqualityComparer(x, y) { return isEqual(x, y); }
-    function defaultSerializer(x) { return x.toString(); }
+  // Defaults
+  var noop = Ix.helpers.noop = function () { },
+    identity = Ix.helpers.identity = function (x) { return x; },
+    pluck = Ix.helpers.pluck = function (property) { return function (x) { return x[property]; }; },
+    just = Ix.helpers.just = function (value) { return function () { return value; }; },
+    defaultComparer = Ix.helpers.defaultEqualityComparer = function (x, y) { return isEqual(x, y); },
+    defaultSubComparer = Ix.helpers.defaultComparer = function (x, y) { return x > y ? 1 : (x < y ? -1 : 0); },
+    defaultError = Ix.helpers.defaultError = function (err) { throw err; },
+    isPromise = Ix.helpers.isPromise = function (p) { return !!p && typeof p.then === 'function'; },
+    not = Ix.helpers.not = function (a) { return !a; };
 
-    var seqNoElements = 'Sequence contains no elements.';
-    var invalidOperation = 'Invalid operation';
-    var slice = Array.prototype.slice;
-    
+  // Errors
+  var sequenceContainsNoElements = 'Sequence contains no elements.';
+  var argumentOutOfRange = 'Argument out of range';

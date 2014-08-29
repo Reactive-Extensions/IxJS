@@ -1,26 +1,21 @@
-    var Enumerator = Ix.Enumerator = function (moveNext, getCurrent, dispose) {
-        this.moveNext = moveNext;
-        this.getCurrent = getCurrent;
-        this.dispose = dispose;
-    };
+  // Shim in iterator support
+  var $iterator$ = (typeof Symbol === 'function' && Symbol.iterator) ||
+    '_es6shim_iterator_';
+  // Bug for mozilla version
+  if (root.Set && typeof new root.Set()['@@iterator'] === 'function') {
+    $iterator$ = '@@iterator';
+  }
 
-    var enumeratorCreate = Enumerator.create = function (moveNext, getCurrent, dispose) {
-        var done = false;
-        dispose || (dispose = noop);
-        return new Enumerator(function () {
-            if (done) {
-                return false;
-            }
-            var result = moveNext();
-            if (!result) {
-                done = true;
-                dispose();
-            }
-            return result;
-        }, function () { return getCurrent(); }, function () {
-            if (!done) {
-                dispose();
-                done = true;
-            }
-        });
-    };
+  Ix.iterator = $iterator$;
+
+  var doneEnumerator = { done: true, value: undefined };
+
+  var Enumerator = Ix.Enumerator = function (next) {
+    this._next = next;
+  };
+
+  Enumerator.prototype.next = function () {
+    return this._next();
+  };
+
+  Enumerator.prototype[$iterator$] = function () { return this; }

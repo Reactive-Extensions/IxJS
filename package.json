@@ -24,24 +24,27 @@
   "dependencies": {},
   "devDependencies": {
     "grunt-cli": "*",
-    "grunt": "~0.4.2",
+    "grunt": "*",
     "grunt-contrib-jshint": "*",
     "grunt-contrib-connect": "*",    
     "grunt-contrib-uglify": "*",
     "grunt-contrib-concat": "*",
     "grunt-contrib-qunit": "*",
     "grunt-contrib-watch": "*",
-    "grunt-saucelabs": "*",
-    "grunt-conventional-changelog": "~1.0.0",
-    "load-grunt-tasks": "~0.2.0"   
+    "grunt-saucelabs": "*" 
   },
   "keywords": [
     "Enumerable",
     "LINQ",
     "Collections",
-    "Array"
+    "Array",
+    "Iterable",
+    "Map",
+    "Set",
+    "WeakMap",
+    "WeakSet"
   ],
-  "main": "ix.node.js",
+  "main": "index.js",
   "scripts": {
     "test": "grunt"
   }  
