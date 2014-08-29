@@ -5,8 +5,7 @@ module.exports = function (grunt) {
         banner:
           '/*'+
           'Copyright (c) Microsoft Open Technologies, Inc.  All rights reserved.\r\n' +
-          'Microsoft Open Technologies would like to thank its contributors, a list.\r\n' +
-          'of whom are at http://aspnetwebstack.codeplex.com/wikipage?title=Contributors..\r\n' +
+          'Microsoft Open Technologies would like to thank its contributors.\r\n' +
           'Licensed under the Apache License, Version 2.0 (the "License"); you.\r\n' +
           'may not use this file except in compliance with the License. You may.\r\n' +
           'obtain a copy of the License at.\r\n\r\n' +
@@ -34,6 +33,9 @@ module.exports = function (grunt) {
             'src/core/linq/repeat.js',
 
             // Aggregate operators
+            'src/core/linq/count.js',
+            'src/core/linq/find.js',
+            'src/core/linq/findindex.js',
             'src/core/linq/foreach.js',
             'src/core/linq/reduce.js',
             'src/core/linq/sum.js',

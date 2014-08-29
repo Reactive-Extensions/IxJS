@@ -371,6 +371,11 @@
 
   var enumerableProto = Enumerable.prototype;
 
+  /**
+   * The Enumerable.of() method creates a new Enumerable instance with a variable number of arguments, regardless of number or type of the arguments.
+   * @param {Arguments} ...args Elements of which to create the Enumerable.
+   * @returns {Enumerable} An Enumerable instance created by the variable number of arguments, regardless of types.
+   */
   Enumerable.of = function () {
     var args = arguments;
     return new Enumerable(function () {
@@ -400,6 +405,7 @@
       });
     });
   };
+
   Enumerable.repeat = function (value, repeatCount) {
     if (repeatCount < 0) { throw new Error('repeatCount must be greater than zero'); }
 
@@ -414,6 +420,79 @@
       });
     });
   };
+  /**
+   * Returns a number that represents how many elements in the specified sequence satisfy a condition if specified, else the number of items in the sequence.
+   *
+   * @example
+   * sequence.count();
+   * sequence.count(function (item, index, seq) { return item % 2 === 0; });
+   *
+   * @param {Function} [predicate] A function to test each element for a condition.
+   * @returns {Number} A number that represents how many elements in the sequence satisfy the condition in the predicate function if specified, else number of items in the sequence.
+   */  
+  enumerableProto.count = function (predicate) {
+    if (!isFunction(predicate)) {
+      throw new TypeError('predicate must be a function');
+    }
+    return selector ?
+      this.filter(predicate).count() :
+      this.reduce(function (acc) { return acc + 1; }, 0);
+  };
+
+  /**
+   * The find() method returns a value in the Enumerable, if an element in the Enumerable satisfies the provided testing function. Otherwise undefined is returned.
+   * @param {Function} predicate 
+   *  predicate is invoked with three arguments: 
+   *      The value of the element
+   *      The index of the element
+   *      The Enumerable object being traversed
+   * @param {Any} thisArg Object to use as this when executing callback.
+   * @returns {Any} The item that satisfies the predicate, else undefined.
+   */
+  enumerableProto.find = function (predicate, thisArg) {
+    var index = 0,
+        iterable = this[$iterator$]();
+    while (1) {
+      var next = iterable.next();
+      if (next.done) { return undefined; }
+      if (predicate.call(thisArg, next.value, index, this)) { return next.value;  }
+      index++;
+    }
+  };
+
+  /**
+   *The findIndex() method returns an index in the Enumerable, if an element in the Enumerable satisfies the provided testing function. Otherwise -1 is returned.
+   * @param {Function} predicate 
+   *  predicate is invoked with three arguments: 
+   *      The value of the element
+   *      The index of the element
+   *      The Enumerable object being traversed
+   * @param {Any} thisArg Object to use as this when executing callback.
+   * @returns {Any} The index of the item that satisfies the predicate, else -1.
+   */
+  enumerableProto.findIndex = function (predicate, thisArg) {
+    var index = 0,
+        iterable = this[$iterator$]();
+    while (1) {
+      var next = iterable.next();
+      if (next.done) { return -1; }
+      if (predicate.call(thisArg, next.value, index, this)) { return index;  }
+      index++;
+    }
+  };
+
+  /**
+   * Performs the specified action on each element of the Enumerable sequence
+   *
+   * @example
+   * sequence.forEach(function (item, index, seq) { console.log(item); });
+   *
+   * @param {Function} action The function to perform on each element of the Enumerable sequence.
+   *  action is invoked with three arguments:
+   *      the element value
+   *      the element index
+   *      the Enumerable sequence being traversed
+   */  
   enumerableProto.forEach = function (selector, thisArg) {
     var index = 0,
         iterable = this[$iterator$]();
@@ -423,6 +502,7 @@
       selector.call(thisArg, next.value, index++, this);
     }
   };
+
   function reduce (source, seed, func) {
     var accumulate = seed, iterator = source[$iterator$](), i = 0;
     while (1) {
@@ -454,14 +534,26 @@
       reduce(this, arguments[0], arguments[1]) :
       reduce1(this, arguments[0]);
   };
+
+  /**
+   * Computes the sum of the sequence of values that are optionally obtained by invoking a transform function on each element of the input sequence.
+   * 
+   * @example
+   *  res = source.sum();
+   *  res = source.sum(function (x) { return x.value; });
+   *
+   * @param {Function} [selector] A transform function to apply to each element.
+   * @returns {Any} The sum of the values.
+   */  
   enumerableProto.sum = function (selector) {
-    if (selector && typeof selector !== 'function') {
+    if (!isFunction(selector)) {
       throw new TypeError('selector must be a function');
     }
     return selector ?
       this.map(selector).sum() :
       this.reduce(function (acc, x) { return acc + x; });
   };
+
   /**
    * Projects each element of a sequence to an Enumerable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein. The index of each source element is used in the intermediate projected form of that element.
    * 
@@ -510,6 +602,18 @@
       });
     });
   };
+
+  /**
+   * Projects each element of a sequence into a new form by incorporating the element's index.
+   * 
+   * @param {Function} selector A transform function to apply to each source element.
+   *  selector is invoked with three arguments: 
+   *      The value of the element
+   *      The index of the element
+   *      The Enumerable object being traversed   
+   * @param {Any} [thisArg] An optional scope for the selector.
+   * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
+   */  
   enumerableProto.map = function (selector, thisArg) {
     var self = this;
     return new Enumerable(function () {
@@ -524,6 +628,17 @@
     });
   };
 
+  /**
+   * Creates a new Enumerable with all elements that pass the test implemented by the provided function.
+   *
+   * @param {Function} predicate 
+   *  predicate is invoked with three arguments: 
+   *      The value of the element
+   *      The index of the element
+   *      The Enumerable object being traversed
+   * @param {Any} [thisArg] Object to use as this when executing predicate.
+   * @returns {Enumerable} An Enumerable that contains elements from the input sequence that satisfy the condition.
+   */  
   enumerableProto.filter = function (predicate, thisArg) {
     var self = this;
     return new Enumerable(function () {
