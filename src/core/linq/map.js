@@ -1,3 +1,14 @@
+  /**
+   * Projects each element of a sequence into a new form by incorporating the element's index.
+   * 
+   * @param {Function} selector A transform function to apply to each source element.
+   *  selector is invoked with three arguments: 
+   *      The value of the element
+   *      The index of the element
+   *      The Enumerable object being traversed   
+   * @param {Any} [thisArg] An optional scope for the selector.
+   * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
+   */  
   enumerableProto.map = function (selector, thisArg) {
     var self = this;
     return new Enumerable(function () {

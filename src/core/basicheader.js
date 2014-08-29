@@ -7,6 +7,7 @@
     defaultSubComparer = Ix.helpers.defaultComparer = function (x, y) { return x > y ? 1 : (x < y ? -1 : 0); },
     defaultError = Ix.helpers.defaultError = function (err) { throw err; },
     isPromise = Ix.helpers.isPromise = function (p) { return !!p && typeof p.then === 'function'; },
+    isFunction = Ix.helpers.isFunction = function (f) { return Object.prototype.toString.call(f) === '[object Function]' && typeof f === 'funciton'; }
     not = Ix.helpers.not = function (a) { return !a; };
 
   // Errors

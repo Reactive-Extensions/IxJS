@@ -38,6 +38,7 @@
     defaultSubComparer = Ix.helpers.defaultComparer = function (x, y) { return x > y ? 1 : (x < y ? -1 : 0); },
     defaultError = Ix.helpers.defaultError = function (err) { throw err; },
     isPromise = Ix.helpers.isPromise = function (p) { return !!p && typeof p.then === 'function'; },
+    isFunction = Ix.helpers.isFunction = function (f) { return Object.prototype.toString.call(f) === '[object Function]' && typeof f === 'funciton'; }
     not = Ix.helpers.not = function (a) { return !a; };
 
   // Errors
@@ -382,6 +383,23 @@
         });
     });
   };
+  /** 
+   * Generates a sequence of integral numbers within a specified range.
+   *
+   * @param {Number} start The value of the first integer in the sequence.
+   * @param {Number} count The number of sequential integers to generate.
+   * @returns {Enumerable} An Enumerable that contains a range of sequential integral numbers.
+   */  
+  Enumerable.range = function (start, count) {
+    return new Enumerable(function () {
+      var current = start - 1, end = start + count - 1;
+      return new Enumerator(function () {
+        return current++ < end ?
+          { done : false, value: current } :
+          doneEnumerator;
+      });
+    });
+  };
   Enumerable.repeat = function (value, repeatCount) {
     if (repeatCount < 0) { throw new Error('repeatCount must be greater than zero'); }
 
@@ -395,6 +413,15 @@
         return { done: false, value: value };
       });
     });
+  };
+  enumerableProto.forEach = function (selector, thisArg) {
+    var index = 0,
+        iterable = this[$iterator$]();
+    while (1) {
+      var next = iterable.next();
+      if (next.done) { return; }
+      selector.call(thisArg, next.value, index++, this);
+    }
   };
   function reduce (source, seed, func) {
     var accumulate = seed, iterator = source[$iterator$](), i = 0;
@@ -426,6 +453,62 @@
     return arguments.length === 2 ?
       reduce(this, arguments[0], arguments[1]) :
       reduce1(this, arguments[0]);
+  };
+  enumerableProto.sum = function (selector) {
+    if (selector && typeof selector !== 'function') {
+      throw new TypeError('selector must be a function');
+    }
+    return selector ?
+      this.map(selector).sum() :
+      this.reduce(function (acc, x) { return acc + x; });
+  };
+  /**
+   * Projects each element of a sequence to an Enumerable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein. The index of each source element is used in the intermediate projected form of that element.
+   * 
+   * @example
+   *   seq.flatMap(new Set([1,2,3,4]))
+   *   seq.flatMap(selector);
+   *   seq.flatMap(collectionSelector, resultSelector);
+   *
+   * @param {Function} collectionSelector A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
+   * @param {Function} [resultSelector] An optional transform function to apply to each element of the intermediate sequence.
+   * @returns {Enumerable} An Enumerable whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of source and then mapping each of those sequence elements and their corresponding source element to a result element.
+   */  
+  enumerableProto.flatMap = function (collectionSelector, resultSelector) {
+    typeof collectionSelector !== 'function' && (collectionSelector = function () { return collectionSelector; });
+    if (resultSelector && !isFunction(resultSelector)) {
+      throw new TypeError('resultSelector must be a function');
+    }
+
+    var parent = this;
+    return new Enumerable(function () {
+      var index = 0, outerIterator, innerIterator;
+      return new Enumerator(function () {
+        outerIterator || (outerIterator = parent[$iterator$]);
+        var outerNext;
+        while(1) {
+          if (!innerIterator) {
+            outerNext = outerIterator.next();
+            if (outerNext.done) {
+              return doneEnumerator;
+            }
+
+            innerIterator = collectionSelector(outerNext.value, index++, parent)[$iterator$];
+          }
+
+          var innerNext = innerIterator.next();
+          if (innerNext.done) {
+            innerIterator = null;
+          } else {
+            var current = innerNext.value;
+            if (resultSelector) {
+              current = resultSelector(outerNext.value, current);
+            }
+            return { done: false, value: current };
+          }          
+        }
+      });
+    });
   };
   enumerableProto.map = function (selector, thisArg) {
     var self = this;
@@ -460,15 +543,6 @@
     });
   };
 
-  enumerableProto.forEach = function (selector, thisArg) {
-    var index = 0,
-        iterable = this[$iterator$]();
-    while (1) {
-      var next = iterable.next();
-      if (next.done) { return; }
-      selector.call(thisArg, next.value, index++, this);
-    }
-  };
   if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
     root.Ix = Ix;
 

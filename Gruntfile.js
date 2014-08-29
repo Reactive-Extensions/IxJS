@@ -30,17 +30,18 @@ module.exports = function (grunt) {
 
             // Creation operators
             'src/core/linq/of.js',
+            'src/core/linq/range.js',
             'src/core/linq/repeat.js',
 
             // Aggregate operators
+            'src/core/linq/foreach.js',
             'src/core/linq/reduce.js',
+            'src/core/linq/sum.js',
 
             // Standard query operators
+            'src/core/linq/flatmap.js',
             'src/core/linq/map.js',
             'src/core/linq/filter.js',
-
-            // Iteration
-            'src/core/linq/foreach.js',
 
             'src/core/exports.js',
             'src/core/outro.js'
