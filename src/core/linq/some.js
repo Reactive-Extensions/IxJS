@@ -16,7 +16,7 @@
     }
     var iterator = this[$iterator$](), i = 0;
     while (1) {
-      var current = iterator.next();
+      var next = iterator.next();
       if (next.done) { return false; }
       if (callback.call(thisArg, next.value, i++, this)) { return true; }
     }    

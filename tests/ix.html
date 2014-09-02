@@ -8,16 +8,18 @@
 <body>
   <div id="qunit"></div>
   <script src="http://code.jquery.com/qunit/qunit-1.11.0.js"></script>
-  <script src="../l2o.js"></script>
-  <script src="../ix.js"></script>  
-  <script src="interactiveassert.js"></script>
+  <script src="../dist/ix.js"></script>  
 
   <!-- Individual Tests -->
-  <script src="tests.aggregates.js"></script>
-  <script src="tests.buffering.js"></script>
-  <script src="tests.creation.js"></script>
-  <script src="tests.exceptions.js"></script>
-  <script src="tests.imperative.js"></script>  
-  <script src="tests.single.js"></script>  
+  
+  <!-- Standard Query Operators -->
+
+  <!-- Aggregate Operators -->
+  <script src="linq/average.js"></script>
+  <script src="linq/count.js"></script>
+  <script src="linq/every.js"></script>
+  <script src="linq/reduce.js"></script>
+  <script src="linq/some.js"></script>
+
 </body>
 </html>

@@ -28,11 +28,13 @@ module.exports = function (grunt) {
             'src/core/enumerable.js',
 
             // Creation operators
+            'src/core/linq/empty.js',
             'src/core/linq/of.js',
             'src/core/linq/range.js',
             'src/core/linq/repeat.js',
 
             // Aggregate operators
+            'src/core/linq/average.js',
             'src/core/linq/count.js',
             'src/core/linq/every.js',
             'src/core/linq/find.js',

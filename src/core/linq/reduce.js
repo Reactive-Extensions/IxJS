@@ -1,4 +1,4 @@
-  function reduce (source, seed, func) {
+  function reduce (source, func, seed) {
     var accumulate = seed, iterator = source[$iterator$](), i = 0;
     while (1) {
       var next = iterator.next();
