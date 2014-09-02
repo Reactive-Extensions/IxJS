@@ -34,10 +34,12 @@ module.exports = function (grunt) {
 
             // Aggregate operators
             'src/core/linq/count.js',
+            'src/core/linq/every.js',
             'src/core/linq/find.js',
             'src/core/linq/findindex.js',
             'src/core/linq/foreach.js',
             'src/core/linq/reduce.js',
+            'src/core/linq/some.js',
             'src/core/linq/sum.js',
 
             // Standard query operators

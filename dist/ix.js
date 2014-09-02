@@ -440,6 +440,30 @@
   };
 
   /**
+   * The every() method tests whether all elements in the Enumerable pass the test implemented by the provided function.
+   * @param {Function} callback Function to test for each element, taking three arguments:
+   *    currentValue - The current element being processed in the Enumerable.
+   *    index - The index of the current element being processed in the Enumerable.
+   *    enumerable - The Enumerable some was called upon.
+   * @param {Any} [thisArg] Value to use as this when executing callback.
+   * @returns {Boolean} true if all elements in the Enumerable passes the test; else false.
+   */
+  enumerableProto.every = function (callback, thisArg) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    if (!isFunction(callback)) {
+      throw new TypeError();
+    }
+    var iterator = this[$iterator$](), i = 0;
+    while (1) {
+      var current = iterator.next();
+      if (next.done) { return true; }
+      if (!callback.call(thisArg, next.value, i++, this)) { return false; }
+    }    
+  };
+
+  /**
    * The find() method returns a value in the Enumerable, if an element in the Enumerable satisfies the provided testing function. Otherwise undefined is returned.
    * @param {Function} predicate 
    *  predicate is invoked with three arguments: 
@@ -487,19 +511,25 @@
    * @example
    * sequence.forEach(function (item, index, seq) { console.log(item); });
    *
-   * @param {Function} action The function to perform on each element of the Enumerable sequence.
-   *  action is invoked with three arguments:
-   *      the element value
-   *      the element index
-   *      the Enumerable sequence being traversed
+   * @param {Function} callback Function to execute for each element, taking three arguments:
+   *      currentValue - The current element being processed in the Enumerable.
+   *      index - The index of the current element being processed in the Enumerable.
+   *      enumerable - The Enumerable forEach was called upon.
+   * @param {Any} [thisArg] Value to use as this when executing callback.
    */  
-  enumerableProto.forEach = function (selector, thisArg) {
+  enumerableProto.forEach = function (callback, thisArg) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    if (!isFunction(callback)) {
+      throw new TypeError();
+    }
     var index = 0,
         iterable = this[$iterator$]();
     while (1) {
       var next = iterable.next();
       if (next.done) { return; }
-      selector.call(thisArg, next.value, index++, this);
+      callback.call(thisArg, next.value, index++, this);
     }
   };
 
@@ -513,26 +543,64 @@
   }
 
   function reduce1 (source, func) {
-    var accumulate, iterator = source[$iterator$](), i = 0;
-    var next = iterator.next();
+    var iterator = source[$iterator$](), i = 0, next = iterator.next();
     if (next.done) {
       throw new TypeError(sequenceContainsNoElements);
     }
-    accumulate = next.value;
+    var accumulate = next.value;
 
     while (1) {
       var next = iterator.next();
-      if (next.done) { 
-        return accumulate; 
-      }
+      if (next.done) { return accumulate; }
       accumulate = func(accumulate, next.value, i++, source);
     }
   }
 
-  enumerableProto.reduce = function (/*seed, accumulator*/) {
+  /**
+   * The reduce() method applies a function against an accumulator and each value of the Enumerable (from left-to-right) has to reduce it to a single value.S
+   * @param {Function} callback Function to execute on each value in the Enumerable, taking four arguments:
+   *      previousValue - The value previously returned in the last invocation of the callback, or initialValue, if supplied.
+   *      currentValue - The current element being processed in the Enumerable.
+   *      index - The index of the current element being processed in the Enumerable.
+   *      enumerable - The Enumerable forEach was called upon.
+   * @param {Any} [thisArg] Value to use as this when executing callback.
+   * @returns {Any} The value produced by the accumulator on all values and the initial value, if supplied. 
+   */  
+  enumerableProto.reduce = function (/*callback, initialValue*/) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    var fn = arguments[0];
+    if (!isFunction(fn)) {
+      throw new TypeError();
+    }        
     return arguments.length === 2 ?
-      reduce(this, arguments[0], arguments[1]) :
-      reduce1(this, arguments[0]);
+      reduce(this, fn, arguments[1]) :
+      reduce1(this, fn);
+  };
+
+  /**
+   * The some() method tests whether some element in the Enumerable passes the test implemented by the provided function.
+   * @param {Function} callback Function to test for each element, taking three arguments:
+   *    currentValue - The current element being processed in the Enumerable.
+   *    index - The index of the current element being processed in the Enumerable.
+   *    enumerable - The Enumerable some was called upon.
+   * @param {Any} [thisArg] Value to use as this when executing callback.
+   * @returns {Boolean} true if some element in the Enumerable passes the test; else false.
+   */
+  enumerableProto.some = function (callback, thisArg) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    if (!isFunction(callback)) {
+      throw new TypeError();
+    }
+    var iterator = this[$iterator$](), i = 0;
+    while (1) {
+      var current = iterator.next();
+      if (next.done) { return false; }
+      if (callback.call(thisArg, next.value, i++, this)) { return true; }
+    }    
   };
 
   /**
@@ -608,14 +676,20 @@
    * 
    * @param {Function} selector A transform function to apply to each source element.
    *  selector is invoked with three arguments: 
-   *      The value of the element
-   *      The index of the element
-   *      The Enumerable object being traversed   
+   *      currentValue - The value of the element
+   *      index - The index of the element
+   *      enumerable - The Enumerable object being traversed   
    * @param {Any} [thisArg] An optional scope for the selector.
    * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
    */  
   enumerableProto.map = function (selector, thisArg) {
-    var self = this;
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }    
+    if (!isFunction(selector)) {
+      throw new TypeError();
+    }
+    var self = this;   
     return new Enumerable(function () {
       var index = 0, iterator;
       return new Enumerator(function () {
@@ -633,23 +707,27 @@
    *
    * @param {Function} predicate 
    *  predicate is invoked with three arguments: 
-   *      The value of the element
-   *      The index of the element
-   *      The Enumerable object being traversed
+   *      currentValue - The value of the element
+   *      index - The index of the element
+   *      enumerable - The Enumerable object being traversed
    * @param {Any} [thisArg] Object to use as this when executing predicate.
    * @returns {Enumerable} An Enumerable that contains elements from the input sequence that satisfy the condition.
    */  
   enumerableProto.filter = function (predicate, thisArg) {
-    var self = this;
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }    
+    if (!isFunction(predicate)) {
+      throw new TypeError();
+    } 
+    var self = this;     
     return new Enumerable(function () {
       var index = 0, iterator;
       return new Enumerator(function () {
         iterator || (iterator = self[$iterator$]());
         while (1) {
           var next = iterator.next();
-          if (next.done) { 
-            return doneEnumerator;
-          }
+          if (next.done) { return doneEnumerator; }
           if (predicate.call(thisArg, next.value, index++, self)) {
             return { done: false, value: next.value };
           }     

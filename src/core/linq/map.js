@@ -3,14 +3,20 @@
    * 
    * @param {Function} selector A transform function to apply to each source element.
    *  selector is invoked with three arguments: 
-   *      The value of the element
-   *      The index of the element
-   *      The Enumerable object being traversed   
+   *      currentValue - The value of the element
+   *      index - The index of the element
+   *      enumerable - The Enumerable object being traversed   
    * @param {Any} [thisArg] An optional scope for the selector.
    * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
    */  
   enumerableProto.map = function (selector, thisArg) {
-    var self = this;
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }    
+    if (!isFunction(selector)) {
+      throw new TypeError();
+    }
+    var self = this;   
     return new Enumerable(function () {
       var index = 0, iterator;
       return new Enumerator(function () {
