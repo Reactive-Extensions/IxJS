@@ -22,16 +22,16 @@
   }
 
   /**
-   * The reduce() method applies a function against an accumulator and each value of the Enumerable (from left-to-right) has to reduce it to a single value.S
-   * @param {Function} callback Function to execute on each value in the Enumerable, taking four arguments:
+   * The reduce() method applies a function against an accumulator and each value of the Iterable (from left-to-right) has to reduce it to a single value.S
+   * @param {Function} callback Function to execute on each value in the Iterable, taking four arguments:
    *      previousValue - The value previously returned in the last invocation of the callback, or initialValue, if supplied.
-   *      currentValue - The current element being processed in the Enumerable.
-   *      index - The index of the current element being processed in the Enumerable.
-   *      enumerable - The Enumerable forEach was called upon.
+   *      currentValue - The current element being processed in the Iterable.
+   *      index - The index of the current element being processed in the Iterable.
+   *      iterable - The Iterable forEach was called upon.
    * @param {Any} [thisArg] Value to use as this when executing callback.
    * @returns {Any} The value produced by the accumulator on all values and the initial value, if supplied. 
    */  
-  enumerableProto.reduce = function (/*callback, initialValue*/) {
+  iterableProto.reduce = function (/*callback, initialValue*/) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }

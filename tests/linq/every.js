@@ -1,21 +1,21 @@
-if (!!Ix.Enumerable.prototype.every) {
+if (!!Ix.Iterable.prototype.every) {
 
   QUnit.module('Every Tests');
 
-  var Enumerable = Ix.Enumerable;
+  var Iterable = Ix.Iterable;
 
   test('Every_Arguments', function () {
     raises(function () {
-      Enumerable.prototype.every.call(null);
+      Iterable.prototype.every.call(null);
     });
 
     raises(function () {
-      Enumerable.range(0, 5).every('foo');
+      Iterable.range(0, 5).every('foo');
     });
   });
 
   test('Every_Match', function () {
-    var xs = Enumerable.range(0, 5);
+    var xs = Iterable.range(0, 5);
 
     var res = xs.every(function (x) {
       return x < 5;
@@ -25,7 +25,7 @@ if (!!Ix.Enumerable.prototype.every) {
   });
 
   test('Every_NonMatch', function () {
-    var xs = Enumerable.range(0, 5);
+    var xs = Iterable.range(0, 5);
 
     var res = xs.every(function (x) {
       return x % 2 === 0;
@@ -35,7 +35,7 @@ if (!!Ix.Enumerable.prototype.every) {
   });
 
   test('Every_Empty', function () {
-    var xs = Enumerable.empty();
+    var xs = Iterable.empty();
 
     var res = xs.every(function (x) {
       ok(false);
@@ -45,7 +45,7 @@ if (!!Ix.Enumerable.prototype.every) {
   });
 
   test('Every_ThisArg', function () {
-    var xs = Enumerable.range(0, 5);
+    var xs = Iterable.range(0, 5);
     var self = { value: 42 };
 
     var res = xs.every(function (x) {

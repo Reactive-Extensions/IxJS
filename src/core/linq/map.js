@@ -5,11 +5,11 @@
    *  selector is invoked with three arguments: 
    *      currentValue - The value of the element
    *      index - The index of the element
-   *      enumerable - The Enumerable object being traversed   
+   *      iterable - The Iterable object being traversed   
    * @param {Any} [thisArg] An optional scope for the selector.
-   * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
+   * @returns {Iterable} An Iterable whose elements are the result of invoking the transform function on each element of source.
    */  
-  enumerableProto.map = function (selector, thisArg) {
+  iterableProto.map = function (selector, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    
@@ -17,13 +17,13 @@
       throw new TypeError();
     }
     var self = this;   
-    return new Enumerable(function () {
+    return new Iterable(function () {
       var index = 0, iterator;
-      return new Enumerator(function () {
+      return new Iterator(function () {
         iterator || (iterator = self[$iterator$]());
         var next = iterator.next();
         return next.done ?
-          doneEnumerator :
+          doneIterator :
           { done: false, value: selector.call(thisArg, next.value, index++, self) };
       });
     });

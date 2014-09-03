@@ -1,21 +1,21 @@
-if (!!Ix.Enumerable.prototype.reduce) {
+if (!!Ix.Iterable.prototype.reduce) {
 
   QUnit.module('Reduce Tests');
 
-  var Enumerable = Ix.Enumerable;
+  var Iterable = Ix.Iterable;
 
   test('Reduce_Arguments', function () {
     raises(function () {
-      Enumerable.prototype.reduce.call(null);
+      Iterable.prototype.reduce.call(null);
     });
 
     raises(function () {
-      Enumerable.range(0, 5).reduce('foo');
+      Iterable.range(0, 5).reduce('foo');
     });
   });
 
   test('Reduce_Func_Empty', function () {
-    var xs = Enumerable.empty();
+    var xs = Iterable.empty();
 
     raises(function () {
       xs.reduce(function (acc, x) { return acc + x; });
@@ -23,7 +23,7 @@ if (!!Ix.Enumerable.prototype.reduce) {
   });
 
   test('Reduce_Func_Multiple', function () {
-    var xs = Enumerable.range(0, 5);
+    var xs = Iterable.range(0, 5);
 
     var res = xs.reduce(function (acc, x) {
       return acc + x;
@@ -33,7 +33,7 @@ if (!!Ix.Enumerable.prototype.reduce) {
   });
 
   test('Reduce_Func_Multiple_Index', function () {
-    var xs = Enumerable.range(0, 5);
+    var xs = Iterable.range(0, 5);
 
     var res = xs.reduce(function (acc, x, i) {
       return acc + x + i;
@@ -42,8 +42,8 @@ if (!!Ix.Enumerable.prototype.reduce) {
     equal(16, res);
   });
 
-  test('Reduce_Func_Multiple_Enumerable', function () {
-    var xs = Enumerable.range(0, 5);
+  test('Reduce_Func_Multiple_Iterable', function () {
+    var xs = Iterable.range(0, 5);
 
     var res = xs.reduce(function (acc, x, i, e) {
       equal(xs, e);
@@ -52,7 +52,7 @@ if (!!Ix.Enumerable.prototype.reduce) {
   });
 
   test('Reduce_Seed_Empty', function () {
-    var xs = Enumerable.empty();
+    var xs = Iterable.empty();
 
     var res = xs.reduce(function (acc, x) {
       return acc + x;
@@ -62,7 +62,7 @@ if (!!Ix.Enumerable.prototype.reduce) {
   });
 
   test('Reduce_Seed_Multiple', function () {
-    var xs = Enumerable.range(0, 5);
+    var xs = Iterable.range(0, 5);
 
     var res = xs.reduce(function (acc, x) {
       return acc + x;
@@ -72,7 +72,7 @@ if (!!Ix.Enumerable.prototype.reduce) {
   }); 
 
   test('Reduce_Seed_Multiple_Index', function () {
-    var xs = Enumerable.range(0, 5);
+    var xs = Iterable.range(0, 5);
 
     var res = xs.reduce(function (acc, x, i) {
       return acc + x + i;
@@ -81,8 +81,8 @@ if (!!Ix.Enumerable.prototype.reduce) {
     equal(20, res);
   }); 
 
-  test('Reduce_Seed_Multiple_Enumerable', function () {
-    var xs = Enumerable.range(0, 5);
+  test('Reduce_Seed_Multiple_Iterable', function () {
+    var xs = Iterable.range(0, 5);
 
     var res = xs.reduce(function (acc, x, i, e) {
       equal(xs, e);

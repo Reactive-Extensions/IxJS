@@ -8,7 +8,7 @@
    * @param {Any} thisArg Object to use as this when executing callback.
    * @returns {Any} The item that satisfies the predicate, else undefined.
    */
-  enumerableProto.find = function (predicate, thisArg) {
+  iterableProto.find = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    

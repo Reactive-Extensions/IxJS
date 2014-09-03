@@ -1,23 +1,23 @@
-if (!!Ix.Enumerable.prototype.average) {
+if (!!Ix.Iterable.prototype.average) {
 
   QUnit.module('Average Tests');
 
-  var Enumerable = Ix.Enumerable;
+  var Iterable = Ix.Iterable;
 
   test('Average_Arguments', function () {
     raises(function () {
-      Enumerable.range(0, 5).average('foo');
+      Iterable.range(0, 5).average('foo');
     });
   });  
 
   test('Average_Empty', function () {
     raises(function () {
-      Enumerable.empty().average();
+      Iterable.empty().average();
     });
   });  
 
   test('Average_Multiple', function () {
-    var xs = Enumerable.range(0, 5);
+    var xs = Iterable.range(0, 5);
 
     var res = xs.average();
 
@@ -25,7 +25,7 @@ if (!!Ix.Enumerable.prototype.average) {
   });
 
   test('Average_Selector_Empty', function () {
-    var xs = Enumerable.empty();
+    var xs = Iterable.empty();
 
     raises(function () {
       xs.average(function (x) { ok(false); });
@@ -33,7 +33,7 @@ if (!!Ix.Enumerable.prototype.average) {
   });  
 
   test('Average_Selector_Multiple', function () {
-    var xs = Enumerable.of({value: 2}, {value: 4});
+    var xs = Iterable.of({value: 2}, {value: 4});
 
     var res = xs.average(function (x) { return x.value; });
 
@@ -41,7 +41,7 @@ if (!!Ix.Enumerable.prototype.average) {
   }); 
 
   test('Average_Selector_ThisArg', function () {
-    var xs = Enumerable.of({value: 2}, {value: 4});
+    var xs = Iterable.of({value: 2}, {value: 4});
     var self = {value: 42};
 
     var res = xs.average(function (x) { 

@@ -1,24 +1,24 @@
-if (!!Ix.Enumerable.from) {
+if (!!Ix.Iterable.from) {
 
   QUnit.module('From Tests');
 
-  var Enumerable = Ix.Enumerable,
+  var Iterable = Ix.Iterable,
     assertionHelper = Ix.assertionHelper,
     hasNext = assertionHelper.hasNext,
     noNext = assertionHelper.noNext;
 
   test('From_Arguments', function () {
     raises(function () {
-      Enumerable.from(null);
+      Iterable.from(null);
     });
 
     raises(function () {
-      Enumerable.from([1,2,3], 'foo');
+      Iterable.from([1,2,3], 'foo');
     });    
   });
 
   test('From array', function () {
-    var e = Enumerable.from([1,2,3]);
+    var e = Iterable.from([1,2,3]);
 
     var iterator = e[Ix.iterator]();
 
@@ -29,7 +29,7 @@ if (!!Ix.Enumerable.from) {
   });
 
   test('From Set', function () {
-    var e = Enumerable.from(new Set(['foo', 'bar']));
+    var e = Iterable.from(new Set(['foo', 'bar']));
 
     var iterator = e[Ix.iterator]();
 
@@ -39,7 +39,7 @@ if (!!Ix.Enumerable.from) {
   });
 
   test('From Map', function () {
-    var e = Enumerable.from(new Map([[1, 2], [2, 4], [4, 8]]))
+    var e = Iterable.from(new Map([[1, 2], [2, 4], [4, 8]]))
 
     var iterator = e[Ix.iterator]();
 
@@ -50,7 +50,7 @@ if (!!Ix.Enumerable.from) {
   });
 
   test('From String', function () {
-    var e = Enumerable.from('foo');
+    var e = Iterable.from('foo');
 
     var iterator = e[Ix.iterator]();
 
@@ -62,7 +62,7 @@ if (!!Ix.Enumerable.from) {
 
   test('From arguments', function () {
     function f() {
-      return Enumerable.from(arguments);
+      return Iterable.from(arguments);
     }
 
     var e = f(1,2,3);
@@ -76,7 +76,7 @@ if (!!Ix.Enumerable.from) {
   });  
 
   test('From Array with mapFn', function () {
-    var e = Enumerable.from([1, 2, 3], function (x) { return x + x; });  
+    var e = Iterable.from([1, 2, 3], function (x) { return x + x; });  
 
     var iterator = e[Ix.iterator]();
 
@@ -87,7 +87,7 @@ if (!!Ix.Enumerable.from) {
   });    
 
   test('From object with length with mapFn', function () {
-    var e = Enumerable.from({length: 3}, function (x, i) { return i; });  
+    var e = Iterable.from({length: 3}, function (x, i) { return i; });  
 
     var iterator = e[Ix.iterator]();
 
@@ -99,7 +99,7 @@ if (!!Ix.Enumerable.from) {
 
   test('From with mapFn and thisArg', function () {
     var self = {value: 42};
-    var e = Enumerable.from([1, 2, 3], function (x) { equal(this, self); return x + x; }, self);  
+    var e = Iterable.from([1, 2, 3], function (x) { equal(this, self); return x + x; }, self);  
 
     e.forEach(function () { }); 
   });   

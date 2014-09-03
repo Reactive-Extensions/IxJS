@@ -1,5 +1,5 @@
   /**
-   * Projects each element of a sequence to an Enumerable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein. The index of each source element is used in the intermediate projected form of that element.
+   * Projects each element of a sequence to an Iterable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein. The index of each source element is used in the intermediate projected form of that element.
    * 
    * @example
    *   seq.flatMap(new Set([1,2,3,4]))
@@ -8,25 +8,25 @@
    *
    * @param {Function} collectionSelector A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
    * @param {Function} [resultSelector] An optional transform function to apply to each element of the intermediate sequence.
-   * @returns {Enumerable} An Enumerable whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of source and then mapping each of those sequence elements and their corresponding source element to a result element.
+   * @returns {Iterable} An Iterable whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of source and then mapping each of those sequence elements and their corresponding source element to a result element.
    */  
-  enumerableProto.flatMap = function (collectionSelector, resultSelector) {
+  iterableProto.flatMap = function (collectionSelector, resultSelector) {
     typeof collectionSelector !== 'function' && (collectionSelector = function () { return collectionSelector; });
     if (resultSelector && !isFunction(resultSelector)) {
       throw new TypeError('resultSelector must be a function');
     }
 
     var parent = this;
-    return new Enumerable(function () {
+    return new Iterable(function () {
       var index = 0, outerIterator, innerIterator;
-      return new Enumerator(function () {
+      return new Iterator(function () {
         outerIterator || (outerIterator = parent[$iterator$]);
         var outerNext;
         while(1) {
           if (!innerIterator) {
             outerNext = outerIterator.next();
             if (outerNext.done) {
-              return doneEnumerator;
+              return doneIterator;
             }
 
             innerIterator = collectionSelector(outerNext.value, index++, parent)[$iterator$];

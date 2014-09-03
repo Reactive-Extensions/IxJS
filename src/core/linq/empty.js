@@ -1,11 +1,11 @@
   /**
-   * Returns an empty Enumerable.
-   * @returns {Enumerable} An empty Enumerable
+   * Returns an empty Iterable.
+   * @returns {Iterable} An empty Iterable
    */  
-  Enumerable.empty = function () {
-    return new Enumerable(function () {
-      return new Enumerator(function () {
-        return doneEnumerator;
+  Iterable.empty = function () {
+    return new Iterable(function () {
+      return new Iterator(function () {
+        return doneIterator;
       });
     });
   };

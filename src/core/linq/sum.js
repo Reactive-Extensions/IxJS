@@ -8,7 +8,7 @@
    * @param {Function} [selector] A transform function to apply to each element.
    * @returns {Any} The sum of the values.
    */  
-  enumerableProto.sum = function (selector) {
+  iterableProto.sum = function (selector) {
     if (!isFunction(selector)) {
       throw new TypeError('selector must be a function');
     }

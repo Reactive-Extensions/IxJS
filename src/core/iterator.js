@@ -8,14 +8,20 @@
 
   Ix.iterator = $iterator$;
 
-  var doneEnumerator = { done: true, value: undefined };
+  var doneIterator = { done: true, value: undefined };
 
-  var Enumerator = Ix.Enumerator = function (next) {
+  /**
+   * Creates a new Iterator with a function to produce the next value.
+   */
+  var Iterator = Ix.Iterator = function (next) {
     this._next = next;
   };
 
-  Enumerator.prototype.next = function () {
+  /**
+   * Returns the next item in the Iterator object
+   */
+  Iterator.prototype.next = function () {
     return this._next();
   };
 
-  Enumerator.prototype[$iterator$] = function () { return this; }
+  Iterator.prototype[$iterator$] = function () { return this; }
