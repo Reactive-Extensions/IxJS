@@ -16,15 +16,16 @@
 }(this, function (global, exp, Ix, undefined) {
     
     Ix.assertionHelper = {
-        noNext: function (sequence) {
-            ok(!sequence.moveNext(), 'Sequence has no next values');
+        noNext: function (iterator) {
+            ok(iterator.next().done, 'Sequence has no next values');
         },
-        hasNext: function (sequence, value, predicate) {
-            ok(sequence.moveNext(), 'Sequence has next value');
+        hasNext: function (iterator, value, predicate) {
+            var next = iterator.next();
+            ok(!next.done, 'Sequence has next value');
             if (!predicate) {
-                equal(value, sequence.getCurrent());
+                equal(value, next.value);
             } else {
-                ok(predicate(value, sequence.getCurrent()));
+                ok(predicate(value, next.value));
             }
         }
     };

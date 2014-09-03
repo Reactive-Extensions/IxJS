@@ -3,15 +3,20 @@
 <head>
   <meta charset="utf-8">
   <title>Reactive Extensions for JavaScript Tests</title>
-  <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.11.0.css">
+  <link rel="stylesheet" href="vendor/qunit-1.11.0.css">
 </head>
 <body>
   <div id="qunit"></div>
-  <script src="http://code.jquery.com/qunit/qunit-1.11.0.js"></script>
+  <script src="vendor/qunit-1.11.0.js"></script>
+  <script src="vendor/es6-shim.min.js"></script>
   <script src="../dist/ix.js"></script>  
+  <script src="interactiveassert.js"></script>
 
   <!-- Individual Tests -->
   
+  <!-- Creation Operators -->
+  <script src="linq/from.js"></script>
+
   <!-- Standard Query Operators -->
 
   <!-- Aggregate Operators -->

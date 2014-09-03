@@ -29,6 +29,7 @@ module.exports = function (grunt) {
 
             // Creation operators
             'src/core/linq/empty.js',
+            'src/core/linq/from.js',
             'src/core/linq/of.js',
             'src/core/linq/range.js',
             'src/core/linq/repeat.js',
@@ -73,5 +74,5 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   // Default task(s).
-  grunt.registerTask('default', ['concat:basic', 'uglify:basic']);
+  grunt.registerTask('default', ['concat:basic', 'uglify:basic', 'qunit']);
 };
