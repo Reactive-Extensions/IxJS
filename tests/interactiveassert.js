@@ -23,9 +23,9 @@
             var next = iterator.next();
             ok(!next.done, 'Sequence has next value');
             if (!predicate) {
-                equal(value, next.value);
+                ok(Ix.helpers.isEqual(value, next.value), 'Got ' + next.value + ' Expected ' + value);
             } else {
-                ok(predicate(value, next.value));
+                ok(predicate(value, next.value), 'Got ' + next.value + ' Expected ' + value);
             }
         }
     };

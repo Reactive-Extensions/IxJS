@@ -3,7 +3,7 @@
     identity = Ix.helpers.identity = function (x) { return x; },
     pluck = Ix.helpers.pluck = function (property) { return function (x) { return x[property]; }; },
     just = Ix.helpers.just = function (value) { return function () { return value; }; },
-    defaultComparer = Ix.helpers.defaultEqualityComparer = function (x, y) { return isEqual(x, y); },
+    defaultComparer = Ix.helpers.isEqual = function (x, y) { return isEqual(x, y); },
     defaultSubComparer = Ix.helpers.defaultComparer = function (x, y) { return x > y ? 1 : (x < y ? -1 : 0); },
     defaultError = Ix.helpers.defaultError = function (err) { throw err; },
     isPromise = Ix.helpers.isPromise = function (p) { return !!p && typeof p.then === 'function'; },
