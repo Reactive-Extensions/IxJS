@@ -12,6 +12,7 @@
       throw new TypeError('Must be iterable or a function which produces an iterable.')
     }
     this._iterator = _iterator;
+  };
 
   Iterable.prototype[$iterator$] = function () {
     return this._iterator();

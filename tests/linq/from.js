@@ -39,7 +39,7 @@ if (!!Ix.Iterable.from) {
   });
 
   test('From Map', function () {
-    var e = Iterable.from(new Map([[1, 2], [2, 4], [4, 8]]))
+    var e = Iterable.from(new Map([[1, 2], [2, 4], [4, 8]]));
 
     var iterator = e[Ix.iterator]();
 

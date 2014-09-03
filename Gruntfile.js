@@ -24,8 +24,8 @@ module.exports = function (grunt) {
             'src/core/intro.js',
             'src/core/basicheader.js',
             'src/core/internal/isequal.js',
-            'src/core/enumerator.js',
-            'src/core/enumerable.js',
+            'src/core/iterator.js',
+            'src/core/iterable.js',
 
             // Creation operators
             'src/core/linq/empty.js',
