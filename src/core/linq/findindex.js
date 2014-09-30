@@ -8,7 +8,7 @@
    * @param {Any} thisArg Object to use as this when executing callback.
    * @returns {Any} The index of the item that satisfies the predicate, else -1.
    */
-  iterableProto.findIndex = function (predicate, thisArg) {
+  enumerableProto.findIndex = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    

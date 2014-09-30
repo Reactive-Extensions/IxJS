@@ -24,8 +24,8 @@ module.exports = function (grunt) {
             'src/core/intro.js',
             'src/core/basicheader.js',
             'src/core/internal/isequal.js',
-            'src/core/iterator.js',
-            'src/core/iterable.js',
+            'src/core/enumerator.js',
+            'src/core/enumerable.js',
 
             // Creation operators
             'src/core/linq/empty.js',
@@ -36,19 +36,31 @@ module.exports = function (grunt) {
 
             // Aggregate operators
             'src/core/linq/average.js',
+            'src/core/linq/contains.js',
             'src/core/linq/count.js',
+            'src/core/linq/elementat.js',
+            'src/core/linq/elementatordefault.js',
             'src/core/linq/every.js',
             'src/core/linq/find.js',
             'src/core/linq/findindex.js',
+            'src/core/linq/first.js',
+            'src/core/linq/firstordefault.js',
             'src/core/linq/foreach.js',
+            'src/core/linq/indexof.js',
             'src/core/linq/reduce.js',
             'src/core/linq/some.js',
             'src/core/linq/sum.js',
 
             // Standard query operators
+            'src/core/linq/defaultifempty.js',
+            'src/core/linq/distinct.js',
+            'src/core/linq/except.js',
             'src/core/linq/flatmap.js',
             'src/core/linq/map.js',
             'src/core/linq/filter.js',
+
+            // Single operators
+
 
             'src/core/exports.js',
             'src/core/outro.js'
@@ -57,9 +69,16 @@ module.exports = function (grunt) {
         }
       },
       uglify: {
+        options: {
+          banner:
+            '/* Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.*/'
+        },
         basic: {
-          src: ['<banner>', 'dist/ix.js'],
-          dest: 'dist/ix.min.js'
+          options: {
+            sourceMap: true,
+            sourceMapName: 'dist/ix.map'
+          },
+          files: {'dist/ix.min.js': ['dist/ix.js'] }
         },
       },
       qunit: {
@@ -67,11 +86,8 @@ module.exports = function (grunt) {
       }
   });
 
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
+  // Load all "grunt-*" tasks
+  require('load-grunt-tasks')(grunt);
 
   // Default task(s).
   grunt.registerTask('default', ['concat:basic', 'uglify:basic', 'qunit']);

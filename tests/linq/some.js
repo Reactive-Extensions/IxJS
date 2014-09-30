@@ -1,21 +1,21 @@
-if (!!Ix.Iterable.prototype.some) {
+if (!!Ix.Enumerable.prototype.some) {
 
   QUnit.module('Some Tests');
 
-  var Iterable = Ix.Iterable;
+  var Enumerable = Ix.Enumerable;
 
   test('Some_Arguments', function () {
     raises(function () {
-      Iterable.prototype.some.call(null);
+      Enumerable.prototype.some.call(null);
     });
 
     raises(function () {
-      Iterable.range(0, 5).some('foo');
+      Enumerable.range(0, 5).some('foo');
     });
   });
 
   test('Some_Predicate_Match', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.some(function (x) {
       return x < 5;
@@ -25,7 +25,7 @@ if (!!Ix.Iterable.prototype.some) {
   });
 
   test('Some_Predicate_NonMatch', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.some(function (x) {
       return x > 5;
@@ -35,7 +35,7 @@ if (!!Ix.Iterable.prototype.some) {
   });
 
   test('Some_Predicate_Empty', function () {
-    var xs = Iterable.empty();
+    var xs = Enumerable.empty();
 
     var res = xs.some(function (x) {
       ok(false);
@@ -45,7 +45,7 @@ if (!!Ix.Iterable.prototype.some) {
   });
 
   test('Some_Predicate_Match', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.some(function (x) {
       return x < 5;
@@ -55,7 +55,7 @@ if (!!Ix.Iterable.prototype.some) {
   });
 
   test('Some_Predicate_Match_Index', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.some(function (x, i) {
       return i < 5;
@@ -65,7 +65,7 @@ if (!!Ix.Iterable.prototype.some) {
   });
 
   test('Some_Predicate_Iterable', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.some(function (x, i, e) {
       equal(xs, e);

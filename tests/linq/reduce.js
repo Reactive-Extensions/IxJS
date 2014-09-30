@@ -1,21 +1,21 @@
-if (!!Ix.Iterable.prototype.reduce) {
+if (!!Ix.Enumerable.prototype.reduce) {
 
   QUnit.module('Reduce Tests');
 
-  var Iterable = Ix.Iterable;
+  var Enumerable = Ix.Enumerable;
 
   test('Reduce_Arguments', function () {
     raises(function () {
-      Iterable.prototype.reduce.call(null);
+      Enumerable.prototype.reduce.call(null);
     });
 
     raises(function () {
-      Iterable.range(0, 5).reduce('foo');
+      Enumerable.range(0, 5).reduce('foo');
     });
   });
 
   test('Reduce_Func_Empty', function () {
-    var xs = Iterable.empty();
+    var xs = Enumerable.empty();
 
     raises(function () {
       xs.reduce(function (acc, x) { return acc + x; });
@@ -23,7 +23,7 @@ if (!!Ix.Iterable.prototype.reduce) {
   });
 
   test('Reduce_Func_Multiple', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.reduce(function (acc, x) {
       return acc + x;
@@ -33,7 +33,7 @@ if (!!Ix.Iterable.prototype.reduce) {
   });
 
   test('Reduce_Func_Multiple_Index', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.reduce(function (acc, x, i) {
       return acc + x + i;
@@ -43,7 +43,7 @@ if (!!Ix.Iterable.prototype.reduce) {
   });
 
   test('Reduce_Func_Multiple_Iterable', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.reduce(function (acc, x, i, e) {
       equal(xs, e);
@@ -52,7 +52,7 @@ if (!!Ix.Iterable.prototype.reduce) {
   });
 
   test('Reduce_Seed_Empty', function () {
-    var xs = Iterable.empty();
+    var xs = Enumerable.empty();
 
     var res = xs.reduce(function (acc, x) {
       return acc + x;
@@ -62,7 +62,7 @@ if (!!Ix.Iterable.prototype.reduce) {
   });
 
   test('Reduce_Seed_Multiple', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.reduce(function (acc, x) {
       return acc + x;
@@ -72,7 +72,7 @@ if (!!Ix.Iterable.prototype.reduce) {
   }); 
 
   test('Reduce_Seed_Multiple_Index', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.reduce(function (acc, x, i) {
       return acc + x + i;
@@ -82,7 +82,7 @@ if (!!Ix.Iterable.prototype.reduce) {
   }); 
 
   test('Reduce_Seed_Multiple_Iterable', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.reduce(function (acc, x, i, e) {
       equal(xs, e);

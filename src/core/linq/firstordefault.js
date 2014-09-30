@@ -4,11 +4,12 @@
    *  predicate is invoked with three arguments: 
    *      currentValue - The value of the element
    *      index - The index of the element
-   *      iterable - The Iterable object being traversed   
+   *      iterable - The Iterable object being traversed
+   * @param {Any} [defaultValue] The default value if there are no elements.
    * @param {Any} [thisArg] Object to use as this when executing predicate.
    * @returns {Any} The first element in the sequence that passes the test in the specified predicate function if specified, else the first element.
    */  
-  enumerableProto.first = function (predicate, thisArg) {
+  enumerableProto.firstOrDefault = function (predicate, defaultValue, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }
@@ -19,7 +20,7 @@
         iterable = this[$iterator$]();
     while (1) {
       var next = iterable.next();
-      if (next.done) { throw new TypeError(sequenceContainsNoElements); }
+      if (next.done) { return defaultValue; }
       if (predicate && predicate.call(thisArg, next.value, index++, this)) {
         return next.value;
       }

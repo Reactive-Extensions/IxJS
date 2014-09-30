@@ -1,0 +1,3 @@
+  AsyncIterable.create = function (next) {
+    
+  };

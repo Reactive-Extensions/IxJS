@@ -8,7 +8,7 @@
    * @param {Any} [thisArg] An optional scope for the selector.       
    * @returns {Number} The average of the sequence of values.
    */
-  iterableProto.average = function(selector, thisArg) {
+  enumerableProto.average = function(selector, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    

@@ -349,28 +349,28 @@
   var doneIterator = { done: true, value: undefined };
 
   /**
-   * Creates a new Iterator with a function to produce the next value.
+   * Creates a new Enumerator with a function to produce the next value.
    */
-  var Iterator = Ix.Iterator = function (next) {
+  var Enumerator = Ix.Enumerator = function (next) {
     this._next = next;
   };
 
   /**
-   * Returns the next item in the Iterator object
+   * Returns the next item in the Enumerator object
    */
-  Iterator.prototype.next = function () {
+  Enumerator.prototype.next = function () {
     return this._next();
   };
 
-  Iterator.prototype[$iterator$] = function () { return this; }
+  Enumerator.prototype[$iterator$] = function () { return this; }
 
   /**
-   * Creates a new instance of the Iterable object with either a function factory or an iterable object.
-   * @param {Function | Object} iterator A factory function which produces an Iterator or an Iterable object.
+   * Creates a new instance of the Enumerable object with either a function factory or an iterable object.
+   * @param {Function | Object} iterator A factory function which produces an Iterator or an Enumerable object.
    */
-  var Iterable = Ix.Iterable = function (iterator) {
+  var Enumerable = Ix.Enumerable = function (iterator) {
     var _iterator;
-    if (typeof iterator[$iterator$] !== 'undefined') {
+    if (typeof iterator[$iterator$] === 'function') {
       _iterator = function () { return iterator; };
     } else if (typeof iterator === 'function') {
       _iterator = iterator;
@@ -380,19 +380,19 @@
     this._iterator = _iterator;
   };
 
-  Iterable.prototype[$iterator$] = function () {
+  Enumerable.prototype[$iterator$] = function () {
     return this._iterator();
   };
 
-  var iterableProto = Iterable.prototype;
+  var enumerableProto = Enumerable.prototype;
 
   /**
-   * Returns an empty Iterable.
-   * @returns {Iterable} An empty Iterable
+   * Returns an empty Enumerable.
+   * @returns {Enumerable} An empty Enumerable
    */  
-  Iterable.empty = function () {
-    return new Iterable(function () {
-      return new Iterator(function () {
+  Enumerable.empty = function () {
+    return new Enumerable(function () {
+      return new Enumerator(function () {
         return doneIterator;
       });
     });
@@ -418,32 +418,32 @@
     }
 
     /**
-     * The Iterable.from() method creates a new Iterable instance from an array-like or iterable object.
-     * @param {Any} arrayLike An array-like or iterable object to convert to an Iterable.
+     * The Enumerable.from() method creates a new Enumerable instance from an array-like or iterable object.
+     * @param {Any} arrayLike An array-like or iterable object to convert to an Enumerable.
      * @param {Function} [mapFn] Map function to call on every element of the array.
      *  selector is invoked with two arguments: 
      *      currentValue - The value of the element
      *      index - The index of the element
      * @param {Any} [thisArg] Value to use as this when executing mapFn.
-     * @returns {Iterable} an Iterable created from the array-like or iterable object.  
+     * @returns {Enumerable} an Enumerable created from the array-like or iterable object.  
      */
-    Iterable.from = function (arrayLike, mapFn, thisArg) {
+    Enumerable.from = function (arrayLike, mapFn, thisArg) {
       var items = Object(arrayLike);
       if (arrayLike == null) {
-        throw new TypeError('Iterable.from requires an array like object');
+        throw new TypeError('Enumerable.from requires an array like object');
       }
       if (mapFn && !isFunction(mapFn)) {
         throw new TypeError();
       }
 
-      return new Iterable(function () {
+      return new Enumerable(function () {
         var isObjIterable = isIterable(items), 
           iterator = isObjIterable ? items[$iterator$]() : null,
           result, 
           i = 0, 
           value,
           length;
-        return new Iterator(function () {
+        return new Enumerator(function () {
           if (isObjIterable) {
             var next = iterator.next();
             if (next.done) { return doneIterator; }
@@ -470,15 +470,15 @@
   }());
 
   /**
-   * The Iterable.of() method creates a new Iterable instance with a variable number of arguments, regardless of number or type of the arguments.
-   * @param {Arguments} ...args Elements of which to create the Iterable.
-   * @returns {Iterable} An Iterable instance created by the variable number of arguments, regardless of types.
+   * The Enumerable.of() method creates a new Enumerable instance with a variable number of arguments, regardless of number or type of the arguments.
+   * @param {Arguments} ...args Elements of which to create the Enumerable.
+   * @returns {Enumerable} An Enumerable instance created by the variable number of arguments, regardless of types.
    */
-  Iterable.of = function () {
+  Enumerable.of = function () {
     var args = arguments;
-    return new Iterable(function () {
+    return new Enumerable(function () {
       var index = -1;
-      return new Iterator(
+      return new Enumerator(
         function () {
           return ++index < args.length ?
             { done: false, value: args[index] } :
@@ -490,12 +490,12 @@
    * Generates a sequence of integral numbers within a specified range.
    * @param {Number} start The value of the first integer in the sequence.
    * @param {Number} count The number of sequential integers to generate.
-   * @returns {Iterable} An Iterable that contains a range of sequential integral numbers.
+   * @returns {Enumerable} An Enumerable that contains a range of sequential integral numbers.
    */  
-  Iterable.range = function (start, count) {
-    return new Iterable(function () {
+  Enumerable.range = function (start, count) {
+    return new Enumerable(function () {
       var current = start - 1, end = start + count - 1;
-      return new Iterator(function () {
+      return new Enumerator(function () {
         return current++ < end ?
           { done : false, value: current } :
           doneIterator;
@@ -507,14 +507,14 @@
    * Generates a sequence that contains one repeated value.
    * @param {Any} value The value to be repeated.
    * @param {Number} repeatCount The number of times to repeat the value in the generated sequence.
-   * @returns {Iterable} An Iterable that contains a repeated value.
+   * @returns {Enumerable} An Enumerable that contains a repeated value.
    */  
-  Iterable.repeat = function (value, repeatCount) {
+  Enumerable.repeat = function (value, repeatCount) {
     if (repeatCount < 0) { throw new Error('repeatCount must be greater than zero'); }
-    return new Iterable(function () {
+    return new Enumerable(function () {
       var left = +repeatCount || 0;
       Math.abs(left) === Infinity && (left = 0);
-      return new Iterator(function () {
+      return new Enumerator(function () {
         if (left === 0) { return doneIterator; }
         if (left > 0) { left--; }
         return { done: false, value: value };
@@ -532,7 +532,7 @@
    * @param {Any} [thisArg] An optional scope for the selector.       
    * @returns {Number} The average of the sequence of values.
    */
-  iterableProto.average = function(selector, thisArg) {
+  enumerableProto.average = function(selector, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    
@@ -556,6 +556,27 @@
     }
   };
   /**
+   * The contains() method determines whether an Enumerable contains a certain element, returning true or false as appropriate.
+   * @param {Any} searchElement Element to locate in the Enumerable.
+   * @param {Number} [fromIndex] Default: 0 (Entire Enumerable is searched)
+   * @returns {Number} true if the element is found in the Enumerable, else false.
+   */
+  enumerableProto.contains = function (searchElement, fromIndex) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    var n = +fromIndex || 0, index = 0, iterator = this[$iterator$]();
+    Math.abs(n) === Infinity && (n = 0);
+    function comparer(a, b) { return (a === 0 && b === 0) || (a === b || (isNaN(a) && isNan(b))); }
+    while (1) {
+      var current = iterator.next();
+      if (next.done) { return false; }
+      if (n >= index && comparer(next.value, searchElement)) { return true; }
+      index++;
+    }
+  };
+
+  /**
    * Returns a number that represents how many elements in the specified sequence satisfy a condition if specified, else the number of items in the sequence.
    *
    * @example
@@ -568,7 +589,7 @@
    *    iterable - The Enumerable some was called upon.   
    * @returns {Number} A number that represents how many elements in the sequence satisfy the condition in the predicate function if specified, else number of items in the sequence.
    */  
-  iterableProto.count = function (predicate, thisArg) {
+  enumerableProto.count = function (predicate, thisArg) {
     if (predicate && !isFunction(predicate)) {
       throw new TypeError('predicate must be a function');
     }
@@ -578,15 +599,56 @@
   };
 
   /**
-   * The every() method tests whether all elements in the Iterable pass the test implemented by the provided function.
-   * @param {Function} callback Function to test for each element, taking three arguments:
-   *    currentValue - The current element being processed in the Iterable.
-   *    index - The index of the current element being processed in the Iterable.
-   *    iterable - The Iterable some was called upon.
-   * @param {Any} [thisArg] Value to use as this when executing callback.
-   * @returns {Boolean} true if all elements in the Iterable passes the test; else false.
+   * Returns the element at a specified index in a sequence.
+   * @param {Number} index The zero-based index of the element to retrieve.
+   * @returns {Any} The element at the specified position in the source sequence.
    */
-  iterableProto.every = function (callback, thisArg) {
+  enumerableProto.elementAt = function (index) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }    
+    var n = +index || 0;
+    Math.abs(n) === Infinity && (n = 0);
+    if (n < 0) { throw new RangeError('index cannot be less than zero.'); }
+    var it = this[$iterator$](), i = 0;
+    while (1) {
+      var next = it.next();
+      if (next.done) { throw new RangeError('index is greater than or equal to the number of elements in source'); }
+      if (i++ === index) { return next.value; }
+    }
+  };
+
+  /**
+   * Returns the element at a specified index in a sequence or a default value if the index is out of range.
+   * @param {Number} index The zero-based index of the element to retrieve.
+   * @param {Any} [defaultValue] Default value if out of range. If not specified, defaults to undefined.
+   * @returns {Any} The default value specified if the index is outside the bounds of the source sequence; otherwise, the element at the specified position in the source sequence.
+   */
+  enumerableProto.elementAtOrDefault = function (index, defaultValue) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }    
+    var n = +index || 0;
+    Math.abs(n) === Infinity && (n = 0);
+    if (n < 0) { throw new RangeError('index cannot be less than zero.'); }
+    var it = this[$iterator$](), i = 0;
+    while (1) {
+      var next = it.next();
+      if (next.done) { return defaultValue; }
+      if (i++ === index) { return next.value; }
+    }
+  };
+
+  /**
+   * The every() method tests whether all elements in the Enumerable pass the test implemented by the provided function.
+   * @param {Function} callback Function to test for each element, taking three arguments:
+   *    currentValue - The current element being processed in the Enumerable.
+   *    index - The index of the current element being processed in the Enumerable.
+   *    iterable - The Enumerable some was called upon.
+   * @param {Any} [thisArg] Value to use as this when executing callback.
+   * @returns {Boolean} true if all elements in the Enumerable passes the test; else false.
+   */
+  enumerableProto.every = function (callback, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }
@@ -611,7 +673,7 @@
    * @param {Any} thisArg Object to use as this when executing callback.
    * @returns {Any} The item that satisfies the predicate, else undefined.
    */
-  iterableProto.find = function (predicate, thisArg) {
+  enumerableProto.find = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    
@@ -638,7 +700,7 @@
    * @param {Any} thisArg Object to use as this when executing callback.
    * @returns {Any} The index of the item that satisfies the predicate, else -1.
    */
-  iterableProto.findIndex = function (predicate, thisArg) {
+  enumerableProto.findIndex = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    
@@ -656,6 +718,63 @@
   };
 
   /**
+   * Returns the first element in a sequence that satisfies a specified condition if specified, else the first element.
+   * @param {Function} [predicate] A function to test each element for a condition
+   *  predicate is invoked with three arguments: 
+   *      currentValue - The value of the element
+   *      index - The index of the element
+   *      iterable - The Iterable object being traversed   
+   * @param {Any} [thisArg] Object to use as this when executing predicate.
+   * @returns {Any} The first element in the sequence that passes the test in the specified predicate function if specified, else the first element.
+   */  
+  enumerableProto.first = function (predicate, thisArg) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    if (predicate && !isFunction(predicate)) {
+      throw new TypeError();
+    }
+    var index = 0,
+        iterable = this[$iterator$]();
+    while (1) {
+      var next = iterable.next();
+      if (next.done) { throw new TypeError(sequenceContainsNoElements); }
+      if (predicate && predicate.call(thisArg, next.value, index++, this)) {
+        return next.value;
+      }
+    }
+  };
+
+  /**
+   * Returns the first element in a sequence that satisfies a specified condition if specified, else the first element.
+   * @param {Function} [predicate] A function to test each element for a condition
+   *  predicate is invoked with three arguments: 
+   *      currentValue - The value of the element
+   *      index - The index of the element
+   *      iterable - The Iterable object being traversed
+   * @param {Any} [defaultValue] The default value if there are no elements.
+   * @param {Any} [thisArg] Object to use as this when executing predicate.
+   * @returns {Any} The first element in the sequence that passes the test in the specified predicate function if specified, else the first element.
+   */  
+  enumerableProto.firstOrDefault = function (predicate, defaultValue, thisArg) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    if (predicate && !isFunction(predicate)) {
+      throw new TypeError();
+    }
+    var index = 0,
+        iterable = this[$iterator$]();
+    while (1) {
+      var next = iterable.next();
+      if (next.done) { return defaultValue; }
+      if (predicate && predicate.call(thisArg, next.value, index++, this)) {
+        return next.value;
+      }
+    }
+  };
+
+  /**
    * Performs the specified action on each element of the Enumerable sequence
    *
    * @example
@@ -667,7 +786,7 @@
    *      iterable - The Enumerable forEach was called upon.
    * @param {Any} [thisArg] Value to use as this when executing callback.
    */  
-  iterableProto.forEach = function (callback, thisArg) {
+  enumerableProto.forEach = function (callback, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }
@@ -680,6 +799,26 @@
       var next = iterable.next();
       if (next.done) { return; }
       callback.call(thisArg, next.value, index++, this);
+    }
+  };
+
+  /**
+   * The indexOf() method returns the first index at which a given element can be found in the Enumerable, or -1 if it is not present.
+   * @param {Any} searchElement Element to locate in the Enumerable.
+   * @param {Number} [fromIndex] Default: 0 (Entire Enumerable is searched)
+   * @returns {Number} The first index at which a given element can be found in the Enumerable, or -1 if not found.
+   */
+  enumerableProto.indexOf = function (searchElement, fromIndex) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    var n = +fromIndex || 0, index = 0, iterator = this[$iterator$]();
+    Math.abs(n) === Infinity && (n = 0);
+    while (1) {
+      var current = iterator.next();
+      if (next.done) { return -1; }
+      if (n >= index && next.value === searchElement) { return index; }
+      index++;
     }
   };
 
@@ -707,16 +846,16 @@
   }
 
   /**
-   * The reduce() method applies a function against an accumulator and each value of the Iterable (from left-to-right) has to reduce it to a single value.S
-   * @param {Function} callback Function to execute on each value in the Iterable, taking four arguments:
+   * The reduce() method applies a function against an accumulator and each value of the Enumerable (from left-to-right) has to reduce it to a single value.S
+   * @param {Function} callback Function to execute on each value in the Enumerable, taking four arguments:
    *      previousValue - The value previously returned in the last invocation of the callback, or initialValue, if supplied.
-   *      currentValue - The current element being processed in the Iterable.
-   *      index - The index of the current element being processed in the Iterable.
-   *      iterable - The Iterable forEach was called upon.
+   *      currentValue - The current element being processed in the Enumerable.
+   *      index - The index of the current element being processed in the Enumerable.
+   *      iterable - The Enumerable forEach was called upon.
    * @param {Any} [thisArg] Value to use as this when executing callback.
    * @returns {Any} The value produced by the accumulator on all values and the initial value, if supplied. 
    */  
-  iterableProto.reduce = function (/*callback, initialValue*/) {
+  enumerableProto.reduce = function (/*callback, initialValue*/) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }
@@ -730,15 +869,15 @@
   };
 
   /**
-   * The some() method tests whether some element in the Iterable passes the test implemented by the provided function.
+   * The some() method tests whether some element in the Enumerable passes the test implemented by the provided function.
    * @param {Function} callback Function to test for each element, taking three arguments:
-   *    currentValue - The current element being processed in the Iterable.
-   *    index - The index of the current element being processed in the Iterable.
-   *    iterable - The Iterable some was called upon.
+   *    currentValue - The current element being processed in the Enumerable.
+   *    index - The index of the current element being processed in the Enumerable.
+   *    iterable - The Enumerable some was called upon.
    * @param {Any} [thisArg] Value to use as this when executing callback.
-   * @returns {Boolean} true if some element in the Iterable passes the test; else false.
+   * @returns {Boolean} true if some element in the Enumerable passes the test; else false.
    */
-  iterableProto.some = function (callback, thisArg) {
+  enumerableProto.some = function (callback, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }
@@ -755,16 +894,11 @@
 
   /**
    * Computes the sum of the sequence of values that are optionally obtained by invoking a transform function on each element of the input sequence.
-   * 
-   * @example
-   *  res = source.sum();
-   *  res = source.sum(function (x) { return x.value; });
-   *
    * @param {Function} [selector] A transform function to apply to each element.
    * @returns {Any} The sum of the values.
    */  
-  iterableProto.sum = function (selector) {
-    if (!isFunction(selector)) {
+  enumerableProto.sum = function (selector) {
+    if (selector && !isFunction(selector)) {
       throw new TypeError('selector must be a function');
     }
     return selector ?
@@ -773,7 +907,89 @@
   };
 
   /**
-   * Projects each element of a sequence to an Iterable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein. The index of each source element is used in the intermediate projected form of that element.
+   * Returns the elements of the specified sequence or the specified value in a singleton collection if the sequence is empty.
+   *
+   * @param {Any} [defaultValue] The value to return if the sequence is empty.
+   * @returns {Enumerable} An Enumerable that contains defaultValue if source is empty; otherwise, source.
+   */  
+  enumerableProto.defaultIfEmpty = function (defaultValue) {
+    var source = this;
+    return new Enumerable(function () {
+      var it, hasValue = false, hasSent = false;
+      return new Enumerator(function () {
+        it || (it = source[$iterator$]());
+        while (1) {
+          var next = it.next();
+          if (next.done) {
+            if (!hasValue && !hasSent) {
+              hasSent = true;
+              return { value: defaultValue, done: false };
+            }
+            return doneIterator;
+          } 
+          hasValue = true;
+          return { value: next.value, done: false };
+        }
+      });
+    });
+  };
+
+  /**
+   * Returns distinct elements from a sequence.
+   * @returns {Observable} The distinct values from a sequence.
+   */
+  enumerableProto.distinct = function () {
+    var source = this;
+    return new Enumerable(function () {
+      var it, map = [];
+      return new Enumerator(function () {
+        while (1) {
+          var next = it.next();
+          if (next.done) { return doneIterator; }
+          if (!map.indexOf(next.value)) {
+            map.push(next.value);
+            return { value: next.value, done: false };
+          }
+        }
+      });
+    });
+  };
+
+  /**
+   * Produces the set difference of two sequences by using the specified comparer function to compare values.
+   * @param {Any} other An Enumerable whose elements that also occur in the first sequence will cause those elements to be removed from the returned sequence.
+   * @returns {Enumerable} A sequence that contains the set difference of the elements of two sequences.
+   */
+  enumerableProto.except = function (other) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }    
+    var source = this;
+    return new Enumerable(function () {
+      Array.isArray(other) && (other = Enumerable.from(other));
+      var otherMap = [], otherIt = other[$iterator$](), otherNext;
+      do {
+        otherNext = otherIt.next();
+        otherNext.done || otherMap.push(otherNext.value);
+      } while (!other.done);
+
+      var it;
+      return new Enumerator(function () {
+        it || (it = source[$iterator$]());
+        while (1) {
+          var next = it.next();
+          if (next.done) { return doneIterator; }
+          if (otherMap.indexOf(next.value) === -1) {
+            otherMap.push(next.value);
+            return { done: false, value: next.value };
+          }
+        }
+      });
+    });
+  };
+
+  /**
+   * Projects each element of a sequence to an Enumerable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein. The index of each source element is used in the intermediate projected form of that element.
    * 
    * @example
    *   seq.flatMap(new Set([1,2,3,4]))
@@ -782,18 +998,18 @@
    *
    * @param {Function} collectionSelector A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
    * @param {Function} [resultSelector] An optional transform function to apply to each element of the intermediate sequence.
-   * @returns {Iterable} An Iterable whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of source and then mapping each of those sequence elements and their corresponding source element to a result element.
+   * @returns {Enumerable} An Enumerable whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of source and then mapping each of those sequence elements and their corresponding source element to a result element.
    */  
-  iterableProto.flatMap = function (collectionSelector, resultSelector) {
+  enumerableProto.flatMap = function (collectionSelector, resultSelector) {
     typeof collectionSelector !== 'function' && (collectionSelector = function () { return collectionSelector; });
     if (resultSelector && !isFunction(resultSelector)) {
       throw new TypeError('resultSelector must be a function');
     }
 
     var parent = this;
-    return new Iterable(function () {
+    return new Enumerable(function () {
       var index = 0, outerIterator, innerIterator;
-      return new Iterator(function () {
+      return new Enumerator(function () {
         outerIterator || (outerIterator = parent[$iterator$]);
         var outerNext;
         while(1) {
@@ -803,7 +1019,7 @@
               return doneIterator;
             }
 
-            innerIterator = collectionSelector(outerNext.value, index++, parent)[$iterator$];
+            innerIterator = collectionSelector(outerNext.value, index++, parent)[$iterator$]();
           }
 
           var innerNext = innerIterator.next();
@@ -811,9 +1027,7 @@
             innerIterator = null;
           } else {
             var current = innerNext.value;
-            if (resultSelector) {
-              current = resultSelector(outerNext.value, current);
-            }
+            resulSelector && (current = resulSelector(outerNext.value, current));
             return { done: false, value: current };
           }          
         }
@@ -828,11 +1042,11 @@
    *  selector is invoked with three arguments: 
    *      currentValue - The value of the element
    *      index - The index of the element
-   *      iterable - The Iterable object being traversed   
+   *      iterable - The Enumerable object being traversed   
    * @param {Any} [thisArg] An optional scope for the selector.
-   * @returns {Iterable} An Iterable whose elements are the result of invoking the transform function on each element of source.
+   * @returns {Enumerable} An Enumerable whose elements are the result of invoking the transform function on each element of source.
    */  
-  iterableProto.map = function (selector, thisArg) {
+  enumerableProto.map = function (selector, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    
@@ -840,9 +1054,9 @@
       throw new TypeError();
     }
     var self = this;   
-    return new Iterable(function () {
+    return new Enumerable(function () {
       var index = 0, iterator;
-      return new Iterator(function () {
+      return new Enumerator(function () {
         iterator || (iterator = self[$iterator$]());
         var next = iterator.next();
         return next.done ?
@@ -853,17 +1067,17 @@
   };
 
   /**
-   * Creates a new Iterable with all elements that pass the test implemented by the provided function.
+   * Creates a new Enumerable with all elements that pass the test implemented by the provided function.
    *
    * @param {Function} predicate 
    *  predicate is invoked with three arguments: 
    *      currentValue - The value of the element
    *      index - The index of the element
-   *      iterable - The Iterable object being traversed
+   *      iterable - The Enumerable object being traversed
    * @param {Any} [thisArg] Object to use as this when executing predicate.
-   * @returns {Iterable} An Iterable that contains elements from the input sequence that satisfy the condition.
+   * @returns {Enumerable} An Enumerable that contains elements from the input sequence that satisfy the condition.
    */  
-  iterableProto.filter = function (predicate, thisArg) {
+  enumerableProto.filter = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }    
@@ -871,9 +1085,9 @@
       throw new TypeError();
     } 
     var self = this;     
-    return new Iterable(function () {
+    return new Enumerable(function () {
       var index = 0, iterator;
-      return new Iterator(function () {
+      return new Enumerator(function () {
         iterator || (iterator = self[$iterator$]());
         while (1) {
           var next = iterator.next();

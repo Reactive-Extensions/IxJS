@@ -1,13 +1,13 @@
   /**
-   * The every() method tests whether all elements in the Iterable pass the test implemented by the provided function.
+   * The every() method tests whether all elements in the Enumerable pass the test implemented by the provided function.
    * @param {Function} callback Function to test for each element, taking three arguments:
-   *    currentValue - The current element being processed in the Iterable.
-   *    index - The index of the current element being processed in the Iterable.
-   *    iterable - The Iterable some was called upon.
+   *    currentValue - The current element being processed in the Enumerable.
+   *    index - The index of the current element being processed in the Enumerable.
+   *    iterable - The Enumerable some was called upon.
    * @param {Any} [thisArg] Value to use as this when executing callback.
-   * @returns {Boolean} true if all elements in the Iterable passes the test; else false.
+   * @returns {Boolean} true if all elements in the Enumerable passes the test; else false.
    */
-  iterableProto.every = function (callback, thisArg) {
+  enumerableProto.every = function (callback, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }

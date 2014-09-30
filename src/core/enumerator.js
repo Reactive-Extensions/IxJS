@@ -11,17 +11,17 @@
   var doneIterator = { done: true, value: undefined };
 
   /**
-   * Creates a new Iterator with a function to produce the next value.
+   * Creates a new Enumerator with a function to produce the next value.
    */
-  var Iterator = Ix.Iterator = function (next) {
+  var Enumerator = Ix.Enumerator = function (next) {
     this._next = next;
   };
 
   /**
-   * Returns the next item in the Iterator object
+   * Returns the next item in the Enumerator object
    */
-  Iterator.prototype.next = function () {
+  Enumerator.prototype.next = function () {
     return this._next();
   };
 
-  Iterator.prototype[$iterator$] = function () { return this; }
+  Enumerator.prototype[$iterator$] = function () { return this; }

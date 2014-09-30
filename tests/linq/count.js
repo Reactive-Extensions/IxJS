@@ -1,10 +1,10 @@
-if (!!Ix.Iterable.prototype.count) {
+if (!!Ix.Enumerable.prototype.count) {
   QUnit.module('Every Tests');
 
-  var Iterable = Ix.Iterable;
+  var Enumerable = Ix.Enumerable;
 
   test('Count_Empty', function () {
-    var xs = Iterable.empty();
+    var xs = Enumerable.empty();
 
     var res = xs.count();
 
@@ -12,7 +12,7 @@ if (!!Ix.Iterable.prototype.count) {
   });
 
   test('Count_Multiple', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.count();
 
@@ -20,7 +20,7 @@ if (!!Ix.Iterable.prototype.count) {
   });
 
   test('Count_Predicate_Empty', function () {
-    var xs = Iterable.empty();
+    var xs = Enumerable.empty();
 
     var res = xs.count(function () { ok(false); });
 
@@ -28,7 +28,7 @@ if (!!Ix.Iterable.prototype.count) {
   });
 
   test('Count_Predicate_Some', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
 
     var res = xs.count(function (x) {
       return x % 2 === 0;
@@ -38,7 +38,7 @@ if (!!Ix.Iterable.prototype.count) {
   });   
   
   test('Count_Predicate_ThisArg', function () {
-    var xs = Iterable.range(0, 5);
+    var xs = Enumerable.range(0, 5);
     var self = {value: 42};
 
     var res = xs.count(function (x) {

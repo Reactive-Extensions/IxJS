@@ -1,10 +1,10 @@
   /**
-   * Returns an empty Iterable.
-   * @returns {Iterable} An empty Iterable
+   * Returns an empty Enumerable.
+   * @returns {Enumerable} An empty Enumerable
    */  
-  Iterable.empty = function () {
-    return new Iterable(function () {
-      return new Iterator(function () {
+  Enumerable.empty = function () {
+    return new Enumerable(function () {
+      return new Enumerator(function () {
         return doneIterator;
       });
     });

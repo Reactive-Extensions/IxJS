@@ -10,7 +10,7 @@
    *      iterable - The Enumerable forEach was called upon.
    * @param {Any} [thisArg] Value to use as this when executing callback.
    */  
-  iterableProto.forEach = function (callback, thisArg) {
+  enumerableProto.forEach = function (callback, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }

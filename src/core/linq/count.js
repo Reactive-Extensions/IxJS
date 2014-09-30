@@ -11,7 +11,7 @@
    *    iterable - The Enumerable some was called upon.   
    * @returns {Number} A number that represents how many elements in the sequence satisfy the condition in the predicate function if specified, else number of items in the sequence.
    */  
-  iterableProto.count = function (predicate, thisArg) {
+  enumerableProto.count = function (predicate, thisArg) {
     if (predicate && !isFunction(predicate)) {
       throw new TypeError('predicate must be a function');
     }
