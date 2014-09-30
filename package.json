@@ -31,7 +31,8 @@
     "grunt-contrib-concat": "*",
     "grunt-contrib-qunit": "*",
     "grunt-contrib-watch": "*",
-    "grunt-saucelabs": "*" 
+    "grunt-saucelabs": "*",
+    "load-grunt-tasks": "*"
   },
   "keywords": [
     "Enumerable",
@@ -40,9 +41,7 @@
     "Array",
     "Iterable",
     "Map",
-    "Set",
-    "WeakMap",
-    "WeakSet"
+    "Set"
   ],
   "main": "index.js",
   "scripts": {
