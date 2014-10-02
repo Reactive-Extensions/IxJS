@@ -50,6 +50,7 @@ module.exports = function (grunt) {
             'src/core/linq/reduce.js',
             'src/core/linq/some.js',
             'src/core/linq/sum.js',
+            'src/core/linq/toarray.js',
 
             // Standard query operators
             'src/core/linq/defaultifempty.js',

@@ -907,6 +907,19 @@
   };
 
   /**
+   * Creates an array from an Enumerable.
+   * @returns {Array} An array that contains the elements from the input sequence.
+   */  
+  enumerableProto.toArray = function () {
+    var results = [], it = this[$iterator$]();
+    while (1) {
+      var next = it.next();
+      if (next.done) { return results; }
+      results.push(next.value);
+    }
+  };
+
+  /**
    * Returns the elements of the specified sequence or the specified value in a singleton collection if the sequence is empty.
    *
    * @param {Any} [defaultValue] The value to return if the sequence is empty.
@@ -1102,7 +1115,6 @@
 
   /** 
    * Returns a specified number of contiguous elements from the start of a sequence.
-   *
    * @param {Number} count The number of elements to return.
    * @returns {Enumerable} An Enumerable that contains the specified number of elements from the start of the input sequence.
    */
@@ -1115,12 +1127,10 @@
       var i = count, it;
       return new Enumerator(function () {
         it || (it = source[$iterator$]());
-        while(1) {
-          var next = it.next();
-          if (next.done) { return doneIterator; }
-          if (i-- === 0) { return doneIterator; }
-          return { value: next.value, done: false };
-        }
+        var next = it.next();
+        if (next.done) { return doneIterator; }
+        if (i-- === 0) { return doneIterator; }
+        return { value: next.value, done: false };
       });
     });
   };
