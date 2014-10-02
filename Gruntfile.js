@@ -58,6 +58,7 @@ module.exports = function (grunt) {
             'src/core/linq/flatmap.js',
             'src/core/linq/map.js',
             'src/core/linq/filter.js',
+            'src/core/linq/take.js',
 
             // Single operators
 
