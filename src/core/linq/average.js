@@ -18,16 +18,13 @@
     if (selector && isFunction(selector)) {
       return this.map(selector, thisArg).average();
     }
-    var iterator = this[$iterator$](), count = 0, sum = 0;
-    while (1) {
-      var next = iterator.next();
-      if (next.done) { 
-        if (count === 0) {
-          throw new TypeError(sequenceContainsNoElements);
-        }
-        return sum / count;
-      }
+    var it = this[$iterator$](), count = 0, sum = 0, next;
+    while (!(next = it.next()).done) {
       count++;
       sum += +next.value;
     }
+    if (count === 0) {
+      throw new TypeError(sequenceContainsNoElements);
+    }
+    return sum / count;
   };

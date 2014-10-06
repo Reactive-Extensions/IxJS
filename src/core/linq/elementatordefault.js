@@ -11,10 +11,9 @@
     var n = +index || 0;
     Math.abs(n) === Infinity && (n = 0);
     if (n < 0) { throw new RangeError('index cannot be less than zero.'); }
-    var it = this[$iterator$](), i = 0;
-    while (1) {
-      var next = it.next();
-      if (next.done) { return defaultValue; }
+    var it = this[$iterator$](), i = 0, next;
+    while (!(next = it.next()).done) {
       if (i++ === index) { return next.value; }
     }
+    return defaultValue;
   };

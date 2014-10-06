@@ -3,10 +3,12 @@
    * @returns {Array} An array that contains the elements from the input sequence.
    */  
   enumerableProto.toArray = function () {
-    var results = [], it = this[$iterator$]();
-    while (1) {
-      var next = it.next();
-      if (next.done) { return results; }
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
+    var results = [], it = this[$iterator$](), next;
+    while (!(next = it.next()).done) {
       results.push(next.value);
     }
+    return results;
   };

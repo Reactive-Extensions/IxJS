@@ -11,16 +11,18 @@
    * @returns {Enumerable} An Enumerable whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of source and then mapping each of those sequence elements and their corresponding source element to a result element.
    */  
   enumerableProto.flatMap = function (collectionSelector, resultSelector) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }
     typeof collectionSelector !== 'function' && (collectionSelector = function () { return collectionSelector; });
     if (resultSelector && !isFunction(resultSelector)) {
       throw new TypeError('resultSelector must be a function');
     }
 
-    var parent = this;
+    var source = this;
     return new Enumerable(function () {
-      var index = 0, outerIterator, innerIterator;
+      var index = 0, outerIterator = source[$iterator$](), innerIterator;
       return new Enumerator(function () {
-        outerIterator || (outerIterator = parent[$iterator$]);
         var outerNext;
         while(1) {
           if (!innerIterator) {
@@ -29,7 +31,9 @@
               return doneIterator;
             }
 
-            innerIterator = collectionSelector(outerNext.value, index++, parent)[$iterator$]();
+            var innerItem = collectionSelector(outerNext.value, index++, source);
+            !isIterable(innerItem) || (innerItem = enumerableFrom(innerItem));
+            innerIterator = innerItem[$iterator$]();
           }
 
           var innerNext = innerIterator.next();

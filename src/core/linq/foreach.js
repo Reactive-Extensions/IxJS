@@ -1,9 +1,5 @@
   /**
    * Performs the specified action on each element of the Enumerable sequence
-   *
-   * @example
-   * sequence.forEach(function (item, index, seq) { console.log(item); });
-   *
    * @param {Function} callback Function to execute for each element, taking three arguments:
    *      currentValue - The current element being processed in the Enumerable.
    *      index - The index of the current element being processed in the Enumerable.
@@ -17,11 +13,8 @@
     if (!isFunction(callback)) {
       throw new TypeError();
     }
-    var index = 0,
-        iterable = this[$iterator$]();
-    while (1) {
-      var next = iterable.next();
-      if (next.done) { return; }
-      callback.call(thisArg, next.value, index++, this);
+    var i = 0, it = this[$iterator$](), next;
+    while (!(next = it.next()).done) {
+      callback.call(thisArg, next.value, i++, this);
     }
   };

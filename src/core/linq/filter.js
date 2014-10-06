@@ -1,6 +1,5 @@
   /**
    * Creates a new Enumerable with all elements that pass the test implemented by the provided function.
-   *
    * @param {Function} predicate 
    *  predicate is invoked with three arguments: 
    *      currentValue - The value of the element
@@ -12,22 +11,21 @@
   enumerableProto.filter = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
-    }    
+    }
     if (!isFunction(predicate)) {
       throw new TypeError();
-    } 
-    var self = this;     
+    }
+    var source = this;     
     return new Enumerable(function () {
-      var index = 0, iterator;
+      var i = 0, it = source[$iterator$]();
       return new Enumerator(function () {
-        iterator || (iterator = self[$iterator$]());
-        while (1) {
-          var next = iterator.next();
-          if (next.done) { return doneIterator; }
-          if (predicate.call(thisArg, next.value, index++, self)) {
+        var next;
+        while (!(next = it.next()).done) {
+          if (predicate.call(thisArg, next.value, i++, source)) {
             return { done: false, value: next.value };
-          }     
+          }
         }
+        return doneIterator;
       });
     });
   };

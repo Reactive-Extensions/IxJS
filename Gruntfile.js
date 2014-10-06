@@ -47,7 +47,12 @@ module.exports = function (grunt) {
             'src/core/linq/firstordefault.js',
             'src/core/linq/foreach.js',
             'src/core/linq/indexof.js',
+            'src/core/linq/last.js',
+            'src/core/linq/lastordefault.js',
             'src/core/linq/reduce.js',
+            'src/core/linq/sequenceequal.js',
+            'src/core/linq/single.js',
+            'src/core/linq/singleordefault.js',
             'src/core/linq/some.js',
             'src/core/linq/sum.js',
             'src/core/linq/toarray.js',
@@ -56,10 +61,14 @@ module.exports = function (grunt) {
             'src/core/linq/defaultifempty.js',
             'src/core/linq/distinct.js',
             'src/core/linq/except.js',
+            'src/core/linq/filter.js',
             'src/core/linq/flatmap.js',
             'src/core/linq/map.js',
-            'src/core/linq/filter.js',
+            'src/core/linq/reverse.js',
+            'src/core/linq/skip.js',
+            'src/core/linq/skipwhile.js',
             'src/core/linq/take.js',
+            'src/core/linq/takewhile.js',
 
             // Single operators
 

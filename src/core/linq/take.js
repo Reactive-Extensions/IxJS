@@ -4,14 +4,16 @@
    * @returns {Enumerable} An Enumerable that contains the specified number of elements from the start of the input sequence.
    */
   enumerableProto.take = function (count) {
+    if (this == null) {
+      throw new TypeError('"this" is null or not defined');
+    }    
     +count || (count = 0);
     Math.abs(count) === Infinity && (count = 0);
     if (count < 0) { throw new RangeError(); }
     var source = this;
     return new Enumerable(function () {
-      var i = count, it;
+      var i = count, it = source[$iterator$]();
       return new Enumerator(function () {
-        it || (it = source[$iterator$]());
         var next = it.next();
         if (next.done) { return doneIterator; }
         if (i-- === 0) { return doneIterator; }
