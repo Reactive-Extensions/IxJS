@@ -1,7 +1,7 @@
   /**
-   * Returns the element at a specified index in a sequence.
+   * Returns the element at a specified index in a sequence or a default value if the index is out of range.
    * @param {Number} index The zero-based index of the element to retrieve.
-   * @returns {Any} The element at the specified position in the source sequence.
+   * @returns {Any} The default value specified if the index is outside the bounds of the source sequence; otherwise, the element at the specified position in the source sequence.
    */
   enumerableProto.elementAt = function (index) {
     if (this == null) {
@@ -14,5 +14,5 @@
     while (!(next = it.next()).done) {
       if (i++ === index) { return next.value; }
     }
-    throw new RangeError('index is greater than or equal to the number of elements in source');
+    return undefined;
   };

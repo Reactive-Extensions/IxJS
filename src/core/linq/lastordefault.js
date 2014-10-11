@@ -8,19 +8,18 @@
    * @param {Any} [thisArg] Object to use as this when executing predicate.
    * @returns {Any} null if the sequence is empty or if no elements pass the test in the predicate function; otherwise, the last element that passes the test in the predicate function if specified, else the last element.
    */
-  enumerableProto.lastOrDefault = function (predicate, thisArg) {
+  enumerableProto.last = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }
     if (predicate && !isFunction(predicate)) {
       throw new TypeError();
     }
-    var it = this[$iterator$](), next, i = 0, value, hasValue;
+    var it = this[$iterator$](), next, i = 0, value;
     while (!(next = it.next()).done) {
       if (!predicate || predicate.call(thisArg, next.value, i++, this)) {
-        hasValue = true;
         value = next.value;
       }
     }
-    return hasValue ? value : undefined;
+    return value;
   };

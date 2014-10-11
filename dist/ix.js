@@ -590,9 +590,9 @@
   };
 
   /**
-   * Returns the element at a specified index in a sequence.
+   * Returns the element at a specified index in a sequence or a default value if the index is out of range.
    * @param {Number} index The zero-based index of the element to retrieve.
-   * @returns {Any} The element at the specified position in the source sequence.
+   * @returns {Any} The default value specified if the index is outside the bounds of the source sequence; otherwise, the element at the specified position in the source sequence.
    */
   enumerableProto.elementAt = function (index) {
     if (this == null) {
@@ -605,27 +605,7 @@
     while (!(next = it.next()).done) {
       if (i++ === index) { return next.value; }
     }
-    throw new RangeError('index is greater than or equal to the number of elements in source');
-  };
-
-  /**
-   * Returns the element at a specified index in a sequence or a default value if the index is out of range.
-   * @param {Number} index The zero-based index of the element to retrieve.
-   * @param {Any} [defaultValue] Default value if out of range. If not specified, defaults to undefined.
-   * @returns {Any} The default value specified if the index is outside the bounds of the source sequence; otherwise, the element at the specified position in the source sequence.
-   */
-  enumerableProto.elementAtOrDefault = function (index, defaultValue) {
-    if (this == null) {
-      throw new TypeError('"this" is null or not defined');
-    }    
-    var n = +index || 0;
-    Math.abs(n) === Infinity && (n = 0);
-    if (n < 0) { throw new RangeError('index cannot be less than zero.'); }
-    var it = this[$iterator$](), i = 0, next;
-    while (!(next = it.next()).done) {
-      if (i++ === index) { return next.value; }
-    }
-    return defaultValue;
+    return undefined;
   };
 
   /**
@@ -712,7 +692,7 @@
    *  predicate is invoked with three arguments: 
    *      currentValue - The value of the element
    *      index - The index of the element
-   *      iterable - The Iterable object being traversed   
+   *      iterable - The Iterable object being traversed
    * @param {Any} [thisArg] Object to use as this when executing predicate.
    * @returns {Any} The first element in the sequence that passes the test in the specified predicate function if specified, else the first element.
    */  
@@ -723,43 +703,13 @@
     if (predicate && !isFunction(predicate)) {
       throw new TypeError();
     }
-    var index = 0,
-        iterable = this[$iterator$]();
-    while (1) {
-      var next = iterable.next();
-      if (next.done) { throw new TypeError(sequenceContainsNoElements); }
+    var i = 0, it = this[$iterator$](), next;
+    while (!(next = it.next()).done) {
       if (predicate && predicate.call(thisArg, next.value, index++, this)) {
         return next.value;
       }
     }
-  };
-
-  /**
-   * Returns the first element in a sequence that satisfies a specified condition if specified, else the first element.
-   * @param {Function} [predicate] A function to test each element for a condition
-   *  predicate is invoked with three arguments: 
-   *      currentValue - The value of the element
-   *      index - The index of the element
-   *      iterable - The Iterable object being traversed
-   * @param {Any} [thisArg] Object to use as this when executing predicate.
-   * @returns {Any} The first element in the sequence that passes the test in the specified predicate function if specified, else the first element.
-   */  
-  enumerableProto.firstOrDefault = function (predicate, thisArg) {
-    if (this == null) {
-      throw new TypeError('"this" is null or not defined');
-    }
-    if (predicate && !isFunction(predicate)) {
-      throw new TypeError();
-    }
-    var index = 0,
-        iterable = this[$iterator$]();
-    while (1) {
-      var next = iterable.next();
-      if (next.done) { return undefined; }
-      if (predicate && predicate.call(thisArg, next.value, index++, this)) {
-        return next.value;
-      }
-    }
+    return undefined;
   };
 
   /**
@@ -804,34 +754,6 @@
   };
 
   /**
-   * Returns the last element of a sequence that satisfies an optional condition if specified, else the last element.
-   * @param {Function} predicate 
-   *  predicate is invoked with three arguments: 
-   *      currentValue - The value of the element
-   *      index - The index of the element
-   *      iterable - The Enumerable object being traversed
-   * @param {Any} [thisArg] Object to use as this when executing predicate.
-   * @returns {Any} The last element in the sequence that passes the test in the specified predicate function if specified, else the last element.
-   */  
-  enumerableProto.last = function (predicate, thisArg) {
-    if (this == null) {
-      throw new TypeError('"this" is null or not defined');
-    }
-    if (predicate && !isFunction(predicate)) {
-      throw new TypeError();
-    }
-    var it = this[$iterator$](), next, i = 0, value, hasValue;
-    while (!(next = it.next()).done) {
-      if (!predicate || predicate.call(thisArg, next.value, i++, this)) {
-        hasValue = true;
-        value = next.value;
-      }
-    }
-    if (hasValue) { return value; }
-    throw new Error(sequenceContainsNoElements);
-  };
-
-  /**
    * Returns the last element of a sequence that satisfies an optioanl condition or a null if no such element is found.
    * @param {Function} predicate 
    *  predicate is invoked with three arguments: 
@@ -841,21 +763,20 @@
    * @param {Any} [thisArg] Object to use as this when executing predicate.
    * @returns {Any} null if the sequence is empty or if no elements pass the test in the predicate function; otherwise, the last element that passes the test in the predicate function if specified, else the last element.
    */
-  enumerableProto.lastOrDefault = function (predicate, thisArg) {
+  enumerableProto.last = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }
     if (predicate && !isFunction(predicate)) {
       throw new TypeError();
     }
-    var it = this[$iterator$](), next, i = 0, value, hasValue;
+    var it = this[$iterator$](), next, i = 0, value;
     while (!(next = it.next()).done) {
       if (!predicate || predicate.call(thisArg, next.value, i++, this)) {
-        hasValue = true;
         value = next.value;
       }
     }
-    return hasValue ? value : undefined;
+    return value;
   };
 
   function reduce (source, func, seed) {
@@ -925,36 +846,6 @@
     return true;
   };
   /**
-   * Returns the only element of a sequence that satisfies an optional condition, and throws an exception if more than one such element exists.
-   * Or returns the only element of a sequence, and throws an exception if there is not exactly one element in the sequence.
-   * @param {Function} [predicate]
-   *  predicate is invoked with three arguments: 
-   *      currentValue - The value of the element
-   *      index - The index of the element
-   *      iterable - The Enumerable object being traversed
-   * @param {Any} [thisArg] Object to use as this when executing predicate.   
-   * @returns {Any} The single element of the input sequence that satisfies a condition if specified, else the first element.
-   */
-  enumerableProto.single = function (predicate, thisArg) {
-    if (this == null) {
-      throw new TypeError('"this" is null or not defined');
-    }    
-    if (predicate && isFunction(predicate)) {
-      return this.filter(predicate, thisArg).single();
-    }
-    var it = this[$iterator$](),
-        next = it.next();
-    if (next.done) {
-      throw new Error(sequenceContainsNoElements);
-    }
-    var value = next.value;
-    next = it.next();
-    if (!next.done) {
-      throw new Error('Sequence contains more than one element');
-    }
-    return value;
-  };
-  /**
    * Returns the only element of a sequence, or a default value if the sequence is empty; this method throws an exception if there is more than one element in the sequence.
    * Or returns the only element of a sequence that satisfies a specified condition or a default value if no such element exists; this method throws an exception if more than one element satisfies the condition
    * @param {Function} [predicate] A function to test each element for a condition
@@ -965,7 +856,7 @@
    * @param {Any} [thisArg] Object to use as this when executing predicate.
    * @returns {Any} The single element of the input sequence that satisfies the optional condition, or undefined if no such element is found.
    */
-  enumerableProto.singleOrDefault = function (predicate, thisArg) {
+  enumerableProto.single = function (predicate, thisArg) {
     if (this == null) {
       throw new TypeError('"this" is null or not defined');
     }
@@ -973,10 +864,9 @@
       throw new TypeError();
     }
     if (predicate) {
-      return this.filter(predicate, thisArg).singleOrDefault();
+      return this.filter(predicate, thisArg).single();
     }
-    var it = this[$iterator$](),
-        next = it.next();
+    var it = this[$iterator$](), next = it.next();
     if (next.done) { return undefined; }
     var value = next.value;
     next = it.next();
@@ -984,7 +874,8 @@
       throw new Error('Sequence contains more than one element');
     }
     return value;
-  };   
+  };
+
   /**
    * The some() method tests whether some element in the Enumerable passes the test implemented by the provided function.
    * @param {Function} callback Function to test for each element, taking three arguments:
