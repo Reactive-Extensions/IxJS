@@ -165,3 +165,26 @@ source.forEach(function (item) {
 ```
 
 * * *
+
+### <a id="fromArray"></a> `Ix.Enumerable.fromArray`
+<a href="#fromArray">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L2037-L2059 "View in source") [&#x24C9;][1]
+
+Converts an Array to an Enumerable sequence.
+
+#### Arguments
+1. `array` *(arguments)*: An array to convert to an Enumerable sequence.
+
+#### Returns
+*(Enumerable)*: An Enumerable sequence created by the values in the array.
+
+#### Example
+```js
+var source = Ix.Enumerable.fromArray([42,56]);
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 42
+// => 56
+```
