@@ -221,3 +221,26 @@ source.forEach(function (item) {
 ```
 
 * * *
+
+### <a id="toArray"></a> `Ix.Enumerable.toArray`
+<a href="#toArray">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L1784-L1802 "View in source") [&#x24C9;][1]
+
+Creates an array from an Enumerable.
+
+#### Arguments
+None
+
+#### Returns
+*(Array)*: An array that contains the elements from the input sequence.
+
+#### Example
+```js
+var source = Ix.Enumerable.return(42)
+	.toArray()
+
+console.log(source);
+
+// => [ 42 ]
+```
+
+* * *
