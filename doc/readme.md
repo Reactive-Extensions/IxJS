@@ -172,7 +172,7 @@ source.forEach(function (item) {
 Converts an Array to an Enumerable sequence.
 
 #### Arguments
-1. `array` *(arguments)*: An array to convert to an Enumerable sequence.
+1. `array`: An array to convert to an Enumerable sequence.
 
 #### Returns
 *(Enumerable)*: An Enumerable sequence created by the values in the array.
@@ -188,3 +188,36 @@ source.forEach(function (item) {
 // => 42
 // => 56
 ```
+
+* * *
+
+### <a id="scan"></a> `Ix.Enumerable.scan`
+<a href="#scan">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/ix.js#L803-L861 "View in source") [&#x24C9;][1]
+
+Generates a sequence of accumulated values by scanning the source sequence and applying an accumulator function.
+
+#### Arguments
+1. `seed`: Accumulator seed value.
+2. `accumulator`: Accumulation function to apply to the current accumulation value and each element of the sequence.
+#### Returns
+*(Enumerable)*: Sequence with all intermediate accumulation values resulting from scanning the sequence.
+
+#### Example
+```js
+var source = Ix.Enumerable.fromArray([0,1,2,3,4])
+	.scan(0, function(accumulation, currentValue){ 
+		return accumulation+currentValue;
+	})
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 0
+// => 1
+// => 3
+// => 6
+// => 10
+```
+
+* * *
