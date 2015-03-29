@@ -8,6 +8,7 @@ The Enumerable object represents a pull based collection.  This class exposes th
 - [case](#switchCase)
 - [catch](#catchException1)
 - [concat](#concat1)
+- [create](#create)
 - [defer](#defer)
 - [doWhile](#doWhile)
 - [for](#forIn)
@@ -162,6 +163,88 @@ source.forEach(function (item) {
 
 // => 42
 // => 56
+```
+
+* * *
+
+### <a id="create"></a>`Ix.Enumerator.create`
+<a href="#create">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L598-L623 "View in source") [&#x24C9;][1]
+
+Creates an state machine that lazily executes an iterator function to update the current value.
+Useful for creating lazy evaluated sequences.
+See `Enumerable.create` below
+
+#### Arguments
+1. `moveNext` *(Function)*: Function that evaluates the next iteration and returns true if the state machine is able to iterate forward, else returns false.
+2. `getCurrent` *(Function)*: Function that gets the current value for the state machine.
+3. `dispose` *(Function)*: Function that terminates the state machine and deterministically releases any resources held by it.
+ 
+#### Returns
+*(Enumerator)*: Enumerator state machine.
+
+#### Example
+```js
+
+return Ix.Enumerable.create(function () {
+        var current = 0;
+        return Ix.Enumerator.create(
+            function () {
+                return current++ <5;
+            },
+            function () { return current; },
+			function () { console.log('disposed'); }
+        );
+    });
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 1
+// => 2
+// => 3
+// => 4
+// => 5
+// => disposed
+```
+
+### `Ix.Enumerable.create`
+[&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L2013-L2021 "View in source") [&#x24C9;][1]
+
+Creates an enumerable sequence based on an enumerator factory function. 
+Useful for creating lazy evaluated sequences.
+See [Enumerator.create](#create) above.
+
+#### Arguments
+1. `getEnumerator` *(Function)*: Enumerator factory function.
+
+#### Returns
+*(Enumerable)*: Sequence that will invoke the enumerator factory upon a call to `getEnumerator`.
+
+#### Example
+```js
+
+return Ix.Enumerable.create(function () {
+        var current = 0;
+        return Ix.Enumerator.create(
+            function () {
+                return current++ <5;
+            },
+            function () { return current; },
+			function () { console.log('disposed'); }
+        );
+    });
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 1
+// => 2
+// => 3
+// => 4
+// => 5
+// => disposed
 ```
 
 * * *
