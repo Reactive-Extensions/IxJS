@@ -409,6 +409,48 @@ source.forEach(function (item) {
 
 * * *
 
+### <a id="selectMany"></a> `selectMany`
+<a href="#selectMany">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L1472-L1520 "View in source") [&#x24C9;][1]
+
+Projects each element of a sequence to an Enumerable, flattens the resulting sequences into one sequence, and invokes a result selector function on each element therein.
+The index of each source element is used in the intermediate projected form of that element.
+
+>Note: `selectMany` is the term taken from Microsoft's LINQ (Language Integrated Query) technology. The more popular term for a method like this is `flatMap`.
+
+####Alias
+ * flatMap _TBD_
+
+#### Arguments
+1. `collectionSelector` *(Function)*: A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
+2. `resultSelector` *(Function)*: An optional transform function to apply to each element of the intermediate sequence.
+
+#### Returns
+*(Enumerable)*: An Enumerable whose elements are the result of invoking the one-to-many transform function `collectionSelector` on each element of source and then mapping each of those sequence elements and their corresponding source element to a result element.
+
+#### Example
+```js
+
+//From the sequence [1,2,3]
+var source = Ix.Enumerable.fromArray([1,2,3])
+	.selectMany(function(item){
+		//Produce the inner sequences of [1], [2,2] and [3,3,3] 
+		return Ix.Enumerable.repeat(item, item)
+	})
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 1
+// => 2
+// => 2
+// => 3
+// => 3
+// => 3
+```
+
+* * *
+
 ### <a id="toArray"></a> `Ix.Enumerable.toArray`
 <a href="#toArray">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L1784-L1802 "View in source") [&#x24C9;][1]
 
