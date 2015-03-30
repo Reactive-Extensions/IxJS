@@ -440,6 +440,35 @@ source.forEach(function (item) {
 
 * * *
 
+
+### <a id="repeat"></a> `Ix.Enumerable.repeat`
+<a href="#repeat">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L2110-L2132 "View in source") [&#x24C9;][1]
+
+Generates a sequence that contains one repeated value.
+
+#### Arguments
+1. `value` *(Any)*: The value to be repeated.
+2. `repeatCount` *(Number)* : The number of times to repeat the value in the generated sequence.
+
+
+#### Returns
+*(Enumerable)*: An Enumerable that contains a repeated value.
+
+#### Example
+```js
+var source = Ix.Enumerable.repeat(42, 3);
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 42
+// => 42
+// => 42
+```
+
+* * *
+
 ### <a id="scan"></a> `scan`
 <a href="#scan">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/ix.js#L803-L861 "View in source") [&#x24C9;][1]
 
