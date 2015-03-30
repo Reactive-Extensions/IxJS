@@ -472,4 +472,38 @@ console.log(source);
 // => [ 42 ]
 ```
 
+
+* * *
+
+### <a id="zip"></a> `zip`
+<a href="#zip">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L1966-L2002 "View in source") [&#x24C9;][1]
+
+Applies a specified function to the corresponding elements of two sequences, which produces a sequence of the results.
+
+#### Arguments
+ 1. `right` *(Enumerable)*: The second sequence to merge.
+ 2. `selector` *(Function)*: A function that specifies how to merge the elements from the two sequences.
+
+#### Returns
+*(Enumerable)*: An Enumerable that contains merged elements of two input sequences.
+
+#### Example
+```js
+var left = Ix.Enumerable.fromArray([1,2,3]);
+var right = Ix.Enumerable.fromArray(['a','b','c']);
+
+var result = left.zip(right, 
+	function(lhs, rhs){
+		return {left:lhs, right:rhs};
+	});
+
+result.forEach(function (item) {
+	console.log(item);
+});
+
+// => { left: 1, right: 'a' }
+// => { left: 2, right: 'b' }
+// => { left: 3, right: 'c' }
+```
+
 * * *
