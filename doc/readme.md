@@ -348,8 +348,8 @@ source.forEach(function (item) {
 Generates a sequence of accumulated values by scanning the source sequence and applying an accumulator function.
 
 #### Arguments
-1. `seed`: Accumulator seed value.
-2. `accumulator`: Accumulation function to apply to the current accumulation value and each element of the sequence.
+1. `seed` *(Any)*: Accumulator seed value.
+2. `accumulator` *(Function)*: Accumulation function to apply to the current accumulation value and each element of the sequence.
 
 #### Returns
 *(Enumerable)*: Sequence with all intermediate accumulation values resulting from scanning the sequence.
