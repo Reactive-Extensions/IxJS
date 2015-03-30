@@ -314,6 +314,34 @@ source.forEach(function (item) {
 
 * * *
 
+### <a id="range"></a> `Ix.Enumerable.range`
+<a href="#range">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L2086-L2108 "View in source") [&#x24C9;][1]
+
+Generates a sequence of integral numbers within a specified range.
+
+#### Arguments
+1. `start` *(Number)*: The value of the first integer in the sequence.
+2. `count ` *(Number)* : The number of sequential integers to generate.
+
+
+#### Returns
+*(Enumerable)*: An Enumerable that contains a range of sequential integral numbers.
+
+#### Example
+```js
+var source = ix.Enumerable.range(0, 3);
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 0
+// => 1
+// => 2
+```
+
+* * *
+
 ### <a id="scan"></a> `Ix.Enumerable.scan`
 <a href="#scan">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/ix.js#L803-L861 "View in source") [&#x24C9;][1]
 
