@@ -314,6 +314,57 @@ source.forEach(function (item) {
 
 * * *
 
+### <a id="join"></a> `join`
+<a href="#join">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L1175-L1222 "View in source") [&#x24C9;][1]
+
+Correlates the elements of two sequences based on matching keys. 
+
+#### Arguments
+1. `inner` *(Enumerable)*: The sequence to join to the first sequence.
+2. `outerKeySelector` *(Function)* : A function to extract the join key from each element of the first sequence.
+3. `innerKeySelector` *(Function)*: A function to extract the join key from each element of the second sequence.
+4. `resultSelector` *(Function)*: A function to create a result element from two matching elements.
+
+#### Returns
+*(Enumerable)*: An Enumerable that has elements that are obtained by performing an inner join on two sequences.
+
+#### Example
+```js
+
+var outer = Ix.Enumerable.fromArray([
+				{number : 0, word : "zero"},
+		        {number : 1, word : "one"},
+		        {number : 2, word : "two"},
+		        {number : 3, word : "three"}
+	        ]);
+var inner = Ix.Enumerable.fromArray([
+				{number : 1, word : "uno"},
+		        {number : 2, word : "dos"},
+		        {number : 3, word : "tres"},
+		        {number : 4, word : "cuatro"}
+	        ]);
+
+var result = outer.join(inner, 
+		function(eng) { return eng.number; }, 
+		function(esp) { return esp.number; }, 
+		function(eng, esp) { 
+			return {
+				english : eng.word, 
+				spanish : esp.word 
+				};
+		});
+
+result.forEach(function (item) {
+	console.log(item);
+});
+
+// => {english:"one", spanish:"uno"},
+// => {english:"two", spanish:"dos"}
+// => {english:"three", spanish:"tres"}
+```
+
+* * *
+
 ### <a id="range"></a> `Ix.Enumerable.range`
 <a href="#range">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L2086-L2108 "View in source") [&#x24C9;][1]
 
