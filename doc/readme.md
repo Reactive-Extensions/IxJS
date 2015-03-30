@@ -274,6 +274,46 @@ source.forEach(function (item) {
 
 * * *
 
+### <a id="generate"></a> `Ix.Enumerable.generate`
+<a href="#generate">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/ix.js#L504-L535 "View in source") [&#x24C9;][1]
+
+Generates a sequence by mimicking a for loop.
+
+#### Arguments
+1. `initialState` *(Any)*: Initial state of the generator loop.
+2. `condition ` *(Function)* : Loop condition
+3. `iterate ` *(Function)*: State update function to run after every iteration of the generator loop.
+4. `resultSelector ` *(Function)*: Result selector to compute resulting sequence elements.
+
+#### Returns
+*(Enumerable)*: Sequence obtained by running the generator loop, yielding computed elements.
+
+#### Example
+```js
+var source = Ix.Enumerable.generate(
+    0,
+	function (x) { return x < 10; },
+	function (x) { return x + 1; },
+	function (x) { return x * x });
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 0
+// => 1
+// => 4
+// => 9
+// => 16
+// => 25
+// => 36
+// => 49
+// => 64
+// => 81
+```
+
+* * *
+
 ### <a id="scan"></a> `Ix.Enumerable.scan`
 <a href="#scan">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/ix.js#L803-L861 "View in source") [&#x24C9;][1]
 
