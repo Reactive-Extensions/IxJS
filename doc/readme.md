@@ -440,7 +440,6 @@ source.forEach(function (item) {
 
 * * *
 
-
 ### <a id="repeat"></a> `Ix.Enumerable.repeat`
 <a href="#repeat">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L2110-L2132 "View in source") [&#x24C9;][1]
 
@@ -464,6 +463,31 @@ source.forEach(function (item) {
 
 // => 42
 // => 42
+// => 42
+```
+
+* * *
+
+### <a id="return"></a> `Ix.Enumerable.return`
+<a href="#return">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L2061-L2084 "View in source") [&#x24C9;][1]
+
+Returns a sequence with a single element.
+An alias for this method is `returnValue` for browsers <IE9.
+
+#### Arguments
+1. `value` *(Any)*: Single element of the resulting sequence.
+
+#### Returns
+*(Enumerable)*: Sequence with a single element.
+
+#### Example
+```js
+var result = Enumerable.return(42);
+
+result.forEach(function (item) {
+	console.log(item);
+});
+
 // => 42
 ```
 
