@@ -374,6 +374,41 @@ source.forEach(function (item) {
 
 * * *
 
+### <a id="select"></a> `select`
+<a href="#select">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L1437-L1470 "View in source") [&#x24C9;][1]
+
+Projects each element of a sequence into a new form by incorporating the element's index.
+
+####Alias
+ * map
+
+#### Arguments
+1. `selector` *(Function)*: A transform function to apply to each source element; the second parameter of the function represents the index of the source element.
+2. `thisArg` *(Any)*: An optional scope for the selector.
+
+#### Returns
+*(Enumerable)*: An Enumerable whose elements are the result of invoking the transform function on each element of source.
+
+#### Example
+```js
+var source = Ix.Enumerable.fromArray([0,1,2,3,4])
+	.select(function(item){ 
+		return item+5;
+	})
+
+source.forEach(function (item) {
+	console.log(item);
+});
+
+// => 5
+// => 6
+// => 7
+// => 8
+// => 9
+```
+
+* * *
+
 ### <a id="toArray"></a> `Ix.Enumerable.toArray`
 <a href="#toArray">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L1784-L1802 "View in source") [&#x24C9;][1]
 
