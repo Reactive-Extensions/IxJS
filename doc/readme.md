@@ -167,6 +167,53 @@ source.forEach(function (item) {
 
 * * *
 
+### <a id="concat2"></a>`concat`
+<a href="#concat2">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L790-L799 "View in source") [&#x24C9;][1]
+
+Concatenates two or more sequences.
+
+#### Arguments
+1. `other` *(arguments)*: An arguments array containing Enumerable sequences.  
+
+#### Returns
+*(Enumerable)*: An Enumerable that contains the concatenated elements of the two (or more) input sequences.
+
+#### Example
+```js
+var source = Ix.Enumerable.return(42);
+var other = Ix.Enumerable.return(56);
+
+var result = source.concat(other);
+
+result.forEach(function (item) {
+	console.log(item);
+});
+
+// => 42
+// => 56
+```
+
+Can also be used to provide multiple sequences to be concatenated
+
+#### Example
+```js
+var source = Ix.Enumerable.return(42);
+var other = Ix.Enumerable.return(56);
+var other2 = Ix.Enumerable.return(57);
+
+var result = source.concat(other, other2);
+
+result.forEach(function (item) {
+	console.log(item);
+});
+
+// => 42
+// => 56
+// => 57
+```
+
+* * *
+
 ### <a id="create"></a>`Ix.Enumerator.create`
 <a href="#create">#</a> [&#x24C8;](https://github.com/Reactive-Extensions/IxJS/blob/master/l2o.js#L598-L623 "View in source") [&#x24C9;][1]
 
