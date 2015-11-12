@@ -981,7 +981,7 @@
          */
         EnumerablePrototype.singleOrDefault = function (predicate) {
             if (predicate) {
-                return this.where(predicate).single();
+                return this.where(predicate).singleOrDefault();
             }
             var e = this.getEnumerator();
             try {
