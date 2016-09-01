@@ -539,7 +539,7 @@
                         }
 
                         var c = e.getCurrent();
-                        var innerElement = lookup.has(outerKeySelector(c)) ? lookup.get(outerKeySelector(c)) : Enumerable.empty();
+                        var innerElement = lookup.has(outerKeySelector(c)) ? lookup.get(outerKeySelector(c)) : null;
                         current = resultSelector(c, innerElement);
                         return true;
                     },
