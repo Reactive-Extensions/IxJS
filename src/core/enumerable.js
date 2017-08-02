@@ -1612,7 +1612,7 @@
         };
 
         OrderedEnumerablePrototype.thenByDescending = function (keySelector, comparer) {
-            return this.createOrderedEnumerable(keySelector, comparer, false);
+            return this.createOrderedEnumerable(keySelector, comparer, true);
         };
 
         return OrderedEnumerable;
