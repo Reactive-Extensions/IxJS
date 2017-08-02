@@ -1515,7 +1515,7 @@
         this.next = next;
     }
 
-    Ix.EnumerableSorter = EnumerableSorter;
+    Ix.Internals.EnumerableSorter = EnumerableSorter;
 
     EnumerableSorter.prototype = {
         computeKeys: function (elements, count) {

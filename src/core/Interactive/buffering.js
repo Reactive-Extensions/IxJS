@@ -1,5 +1,5 @@
 
-    var SharedBuffer = Ix.SharedBuffer = (function () {
+    var SharedBuffer = root.Internals.SharedBuffer = (function () {
         inherits(SharedBuffer, Enumerable);
 
         function SharedBuffer (source) {
@@ -71,7 +71,7 @@
         this.length = 0;
     }
 
-    Ix.RefCountList = RefCountList;
+    root.Internals.RefCountList = RefCountList;
 
     var RefCountListPrototype = RefCountList.prototype;
     RefCountListPrototype.clear = function () {
@@ -100,7 +100,7 @@
         this.readerCount--;
     };
 
-    var PublishedBuffer = Ix.PublishedBuffer = (function () {
+    var PublishedBuffer = root.Internals.PublishedBuffer = (function () {
         inherits(PublishedBuffer, Enumerable);
 
         function PublishedBuffer(source) {
@@ -224,7 +224,7 @@
         this.length = 0;
     }
 
-    Ix.MaxRefCountList = MaxRefCountList;
+    root.Internals.MaxRefCountList = MaxRefCountList;
 
     var MaxRefCountListPrototype = MaxRefCountList.prototype;
     MaxRefCountListPrototype.done = noop;
@@ -241,7 +241,7 @@
         return this.list[i]; 
     };
 
-    var MemoizedBuffer = Ix.MemoizedBuffer = (function () {
+    var MemoizedBuffer = root.Internals.MemoizedBuffer = (function () {
         inherits(MemoizedBuffer, Enumerable);
 
         function MemoizedBuffer(source, buffer) {
