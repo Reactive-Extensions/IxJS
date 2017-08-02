@@ -100,7 +100,7 @@
 
     // Dictionary implementation
 
-    var Dictionary = function (capacity, comparer) {
+    var Dictionary = Ix.Internals.Dictionary = function (capacity, comparer) {
         if (capacity < 0) {
             throw new Error('out of range')
         }

@@ -1,5 +1,5 @@
 
-    var SharedBuffer = (function () {
+    var SharedBuffer = Ix.SharedBuffer = (function () {
         inherits(SharedBuffer, Enumerable);
 
         function SharedBuffer (source) {
@@ -71,6 +71,8 @@
         this.length = 0;
     }
 
+    Ix.RefCountList = RefCountList;
+
     var RefCountListPrototype = RefCountList.prototype;
     RefCountListPrototype.clear = function () {
         this.list = {};
@@ -98,7 +100,7 @@
         this.readerCount--;
     };
 
-    var PublishedBuffer = (function () {
+    var PublishedBuffer = Ix.PublishedBuffer = (function () {
         inherits(PublishedBuffer, Enumerable);
 
         function PublishedBuffer(source) {
@@ -222,6 +224,8 @@
         this.length = 0;
     }
 
+    Ix.MaxRefCountList = MaxRefCountList;
+
     var MaxRefCountListPrototype = MaxRefCountList.prototype;
     MaxRefCountListPrototype.done = noop;
     MaxRefCountListPrototype.push = function (item) {
@@ -237,7 +241,7 @@
         return this.list[i]; 
     };
 
-    var MemoizedBuffer = (function () {
+    var MemoizedBuffer = Ix.MemoizedBuffer = (function () {
         inherits(MemoizedBuffer, Enumerable);
 
         function MemoizedBuffer(source, buffer) {
