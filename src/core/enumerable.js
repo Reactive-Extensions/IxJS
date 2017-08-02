@@ -1608,7 +1608,7 @@
         };
 
         OrderedEnumerablePrototype.thenBy = function (keySelector, comparer) {
-            return this.createOrderedEnumerable(keySelector, null, false);
+            return this.createOrderedEnumerable(keySelector, comparer, false);
         };
 
         OrderedEnumerablePrototype.thenByDescending = function (keySelector, comparer) {
