@@ -1,4 +1,4 @@
-    var Lookup = (function () {
+    var Lookup = Ix.Internals.Lookup = (function () {
 
         function Lookup(map) {
             this.map = map;

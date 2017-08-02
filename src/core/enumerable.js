@@ -1515,6 +1515,8 @@
         this.next = next;
     }
 
+    Ix.Internals.EnumerableSorter = EnumerableSorter;
+
     EnumerableSorter.prototype = {
         computeKeys: function (elements, count) {
             this.keys = new Array(count);
@@ -1564,7 +1566,7 @@
         }
     };
 
-    var OrderedEnumerable = (function () {
+    var OrderedEnumerable = Ix.OrderedEnumerable = (function () {
         inherits(OrderedEnumerable, Enumerable);
         function OrderedEnumerable (source, keySelector, comparer, descending) {
             this.source = source;
