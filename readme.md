@@ -59,14 +59,12 @@ There are multiple ways of getting started with the Interactive Extensions.  The
 
 	bower install Ix
 
-### Installing with [Jam](http://jamjs.org/)
-	
-	jam install ix
-
 ### Installing via [NPM](https://npmjs.org/):
 
-    npm install ix
-    npm install -g ix
+> You must specify a version of 1.0.6 or earlier to retrieve this package from npm 
+
+    npm install ix@1.0.6
+    npm install -g ix@1.0.6
 
 ### Using in Node.js:
 ```js
